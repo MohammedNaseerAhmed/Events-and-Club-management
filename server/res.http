@@ -1,0 +1,68 @@
+###
+POST http://localhost:5000/api/clubs
+Content-Type: application/json
+
+{
+  "name": "Chess Club",
+  "description": "A club for chess enthusiasts.",
+  "category": "sports",
+  "contact": "chessclub@example.com",
+  "instagram": "https://instagram.com/chessclub"
+}
+
+### Create a User
+POST http://localhost:5000/api/auth/register
+Content-Type: application/json
+
+{
+  "name": "John Doe",
+  "email": "john@example.com",
+  "password": "securepassword123",
+  "role": "student",
+  "avatarUrl": "https://example.com/avatar.png"
+}
+
+### Create a Club
+POST http://localhost:5000/api/clubs
+Content-Type: application/json
+
+{
+  "name": "Chess Club",
+  "description": "A club for chess enthusiasts.",
+  "category": "cultural",
+  "members": 10,
+  "events": 0,
+  "achievements": ["Won inter-college chess tournament 2023"],
+  "contact": "chessclub@example.com",
+  "instagram": "https://instagram.com/chessclub",
+  "icon": "https://example.com/chess-icon.png",
+  "gradient": "linear-gradient(to right, #000000, #434343)"
+}
+
+### Create an Event
+POST http://localhost:5000/api/events
+Content-Type: application/json
+
+{
+  "title": "Inter-College Chess Tournament",
+  "description": "A grand chess competition open for all students.",
+  "posterUrl": "https://example.com/chess-event.png",
+  "date": "2025-09-10",
+  "time": "10:00 AM",
+  "venue": "Main Auditorium",
+  "clubId": "68b70e2f9970a9dea71045a1",
+  "attendees": []
+}
+
+### Create a Notification (linked to event + club)
+POST http://localhost:5000/api/notifications
+Content-Type: application/json
+
+{
+  "title": "Chess Tournament Reminder",
+  "description": "Don’t forget the tournament tomorrow!",
+  "type": "reminder",
+  "link": "https://example.com/chess-event-details",
+  "clubId": "68b70e2f9970a9dea71045a1",
+  "eventId": "68b719299970a9dea71045ae"
+}

@@ -1,0 +1,57 @@
+import React, { useState } from 'react';
+import { useAdminAuth } from '../context/AdminAuthContext';
+import { useNavigate } from 'react-router-dom';
+
+const AdminLogin = () => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const { login, isAuthenticated } = useAdminAuth();
+  const navigate = useNavigate();
+
+  const handleSubmit = async e => {
+    e.preventDefault();
+    setError('');
+    try {
+      await login(email, password);
+      navigate('/admin/dashboard');
+    } catch (err) {
+      setError(err.message || 'Login failed');
+    }
+  };
+
+  if (isAuthenticated) {
+    navigate('/admin/dashboard');
+    return null;
+  }
+
+  return (
+    <div className="max-w-md mx-auto mt-20 p-6 bg-white rounded-lg shadow">
+      <h2 className="text-2xl font-bold mb-6 text-center">Admin Login</h2>
+      {error && <div className="text-red-500 mb-4">{error}</div>}
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <input
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={e => setEmail(e.target.value)}
+          required
+          className="w-full border px-3 py-2 rounded"
+        />
+        <input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={e => setPassword(e.target.value)}
+          required
+          className="w-full border px-3 py-2 rounded"
+        />
+        <button type="submit" className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition">
+          Login
+        </button>
+      </form>
+    </div>
+  );
+};
+
+export default AdminLogin;

@@ -1,0 +1,85 @@
+### Health check
+GET http://localhost:5000/health
+Accept: application/json
+
+###
+
+### Register user
+POST http://localhost:5000/api/auth/register
+Content-Type: application/json
+
+{
+  "name": "Test User1",
+  "email": "testuser1@example.com",
+  "password": "password123"
+}
+
+###
+
+### Login user
+POST http://localhost:5000/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "testuser@example.com",
+  "password": "naseer"
+}
+
+###
+
+### Get current user profile (replace {{token}} with Bearer token)
+GET http://localhost:5000/api/auth/me
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4YjgzODliMDdmYzZjYmRjYjJkOWRjYyIsInJvbGUiOiJzdHVkZW50IiwiaWF0IjoxNzU2OTIwNDYzLCJleHAiOjE3NTc1MjUyNjN9.On-im9VejMRQel7qCVqzzQRcT707LBN_HoQCB_DlUKE
+###
+
+### List clubs with pagination and search
+GET http://localhost:5000/api/clubs?page=1&limit=10&search=tech
+Accept: application/json
+
+###
+
+### Create a club (Admin, replace {{token}} with admin token)
+POST http://localhost:5000/api/clubs
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4YjgzODliMDdmYzZjYmRjYjJkOWRjYyIsInJvbGUiOiJzdHVkZW50IiwiaWF0IjoxNzU2OTIwNDYzLCJleHAiOjE3NTc1MjUyNjN9.On-im9VejMRQel7qCVqzzQRcT707LBN_HoQCB_DlUKE
+Content-Type: application/json
+
+{
+  "name": "Tech Club",
+  "description": "A club for tech enthusiasts",
+  "contact": "techclub@example.com"
+}
+
+###
+
+### List events with pagination
+GET http://localhost:5000/api/events?page=1&limit=5
+Accept: application/json
+
+###
+
+### Create event (Admin)
+POST http://localhost:5000/api/events
+Authorization: Bearer "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4YjgzODliMDdmYzZjYmRjYjJkOWRjYyIsInJvbGUiOiJzdHVkZW50IiwiaWF0IjoxNzU2OTAzNjk4LCJleHAiOjE3NTc1MDg0OTh9.fI03U_Jz94UoXv2wm1lG9UnnQ5cgpSqLYKjiHoN7btc"
+Content-Type: application/json
+
+{
+  "title": "Annual Tech Meetup",
+  "description": "Networking event",
+  "date": "2025-10-15",
+  "clubId": "64f9a1c5a9b9fad9a7c12345"
+}
+
+###
+
+### Upload club logo (Admin, multipart form)
+POST http://localhost:5000/api/upload/club-logo
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4YjgzODliMDdmYzZjYmRjYjJkOWRjYyIsInJvbGUiOiJzdHVkZW50IiwiaWF0IjoxNzU2OTIwNDYzLCJleHAiOjE3NTc1MjUyNjN9.On-im9VejMRQel7qCVqzzQRcT707LBN_HoQCB_DlUKE
+Content-Type: multipart/form-data
+
+--boundary
+Content-Disposition: form-data; name="logo"; filename="logo.png"
+Content-Type: image/png
+
+< ./path/to/logo.png
+--boundary--
+
