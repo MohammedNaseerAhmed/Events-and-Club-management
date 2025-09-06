@@ -26,6 +26,11 @@ const Header = () => {
     { name: "Clubs", href: "/clubs" },
   ];
 
+  // Add dashboard link only for club admin users
+  const adminLinks = user?.role === 'club_admin' ? [
+    { name: "Club Dashboard", href: "/club-admin/dashboard" }
+  ] : [];
+
   return (
     <header className="bg-white/95 backdrop-blur-md shadow-lg sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -55,6 +60,15 @@ const Header = () => {
                 {link.name}
               </a>
             ))}
+            {adminLinks.map((link) => (
+              <a
+                key={link.name}
+                href={link.href}
+                className="text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:shadow-lg px-3 py-2 rounded-md text-sm font-medium transition-all duration-200"
+              >
+                {link.name}
+              </a>
+            ))}
           </nav>
 
           {/* Right side actions */}
@@ -72,13 +86,26 @@ const Header = () => {
             </div>
 
             {/* Login/Logout */}
-            <button
-              onClick={handleAuth}
-              className="flex items-center space-x-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-lg hover:shadow-lg transition-all duration-200"
-            >
-              <User className="w-4 h-4" />
-              <span className="hidden sm:inline">{isAuthenticated ? "Logout" : "Login"}</span>
-            </button>
+            {!isAuthenticated && (
+              <div className="flex items-center space-x-2">
+                <a
+                  href="/login"
+                  className="flex items-center space-x-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-lg hover:shadow-lg transition-all duration-200"
+                >
+                  <User className="w-4 h-4" />
+                  <span className="hidden sm:inline">Student Login</span>
+                </a>
+              </div>
+            )}
+            {isAuthenticated && (
+              <button
+                onClick={handleAuth}
+                className="flex items-center space-x-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-lg hover:shadow-lg transition-all duration-200"
+              >
+                <User className="w-4 h-4" />
+                <span className="hidden sm:inline">Logout</span>
+              </button>
+            )}
 
             {/* Mobile menu button */}
             <button
@@ -99,6 +126,25 @@ const Header = () => {
                   key={link.name}
                   href={link.href}
                   className="block px-3 py-2 text-gray-700 hover:text-blue-600 rounded-md text-base font-medium transition-colors duration-200"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  {link.name}
+                </a>
+              ))}
+              {!isAuthenticated && (
+                <a
+                  href="/login"
+                  className="block px-3 py-2 text-white bg-gradient-to-r from-blue-600 to-purple-600 rounded-md text-base font-medium transition-all duration-200"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Student Login
+                </a>
+              )}
+              {adminLinks.map((link) => (
+                <a
+                  key={link.name}
+                  href={link.href}
+                  className="block px-3 py-2 text-white bg-gradient-to-r from-blue-600 to-purple-600 rounded-md text-base font-medium transition-all duration-200"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   {link.name}

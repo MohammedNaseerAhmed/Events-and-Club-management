@@ -1,6 +1,5 @@
 import mongoose from 'mongoose';
 import Event from '../models/Event.js';
-import { ok } from '../utils/response.js';
 
 // Create a new event
 export const createEvent = async (req, res, next) => {
@@ -19,7 +18,10 @@ export const updateEvent = async (req, res, next) => {
     if (!event) {
       return res.status(404).json({ message: 'Event not found' });
     }
-    return ok(res, { event });
+    return res.json({
+      success: true,
+      data: { event }
+    });
   } catch (error) {
     next(error);
   }
@@ -32,7 +34,10 @@ export const deleteEvent = async (req, res, next) => {
     if (!event) {
       return res.status(404).json({ message: 'Event not found' });
     }
-    return ok(res, { deleted: true });
+    return res.json({
+      success: true,
+      data: { deleted: true }
+    });
   } catch (error) {
     next(error);
   }
@@ -45,7 +50,10 @@ export const getEvent = async (req, res, next) => {
     if (!event) {
       return res.status(404).json({ message: 'Event not found' });
     }
-    return ok(res, { event });
+    return res.json({
+      success: true,
+      data: { event }
+    });
   } catch (error) {
     next(error);
   }
@@ -54,25 +62,35 @@ export const getEvent = async (req, res, next) => {
 // List events with optional text search and filter by clubId with pagination
 export const listEvents = async (req, res, next) => {
   try {
+    console.log('listEvents: Starting query...');
     const { page = 1, limit = 10, q = '', clubId } = req.query;
+    console.log('listEvents: Query params:', { page, limit, q, clubId });
+    
     const filter = {};
     if (q) filter.$text = { $search: String(q) };
     if (clubId && mongoose.isValidObjectId(clubId)) filter.clubId = clubId;
 
     const skip = (Number(page) - 1) * Number(limit);
+    console.log('listEvents: Filter:', filter);
 
     const [items, total] = await Promise.all([
       Event.find(filter).sort({ date: 1 }).skip(skip).limit(Number(limit)),
       Event.countDocuments(filter),
     ]);
 
-    return ok(res, {
-      items,
-      total,
-      page: Number(page),
-      pages: Math.ceil(total / Number(limit)),
+    console.log('listEvents: Found', items.length, 'events, total:', total);
+
+    return res.json({
+      success: true,
+      data: {
+        items,
+        total,
+        page: Number(page),
+        pages: Math.ceil(total / Number(limit)),
+      }
     });
   } catch (error) {
+    console.error('listEvents: Error:', error);
     next(error);
   }
 };
@@ -80,10 +98,19 @@ export const listEvents = async (req, res, next) => {
 // Get upcoming events (events with date >= now) limited to 20
 export const upcomingEvents = async (req, res, next) => {
   try {
+    console.log('upcomingEvents: Starting query...');
     const now = new Date();
+    console.log('upcomingEvents: Current date:', now);
+    
     const items = await Event.find({ date: { $gte: now } }).sort({ date: 1 }).limit(20);
-    return ok(res, { items });
+    console.log('upcomingEvents: Found', items.length, 'events');
+    
+    return res.json({
+      success: true,
+      data: { items }
+    });
   } catch (error) {
+    console.error('upcomingEvents: Error:', error);
     next(error);
   }
 };
@@ -99,7 +126,10 @@ export const registerForEvent = async (req, res, next) => {
     if (!event) {
       return res.status(404).json({ message: 'Event not found' });
     }
-    return ok(res, { event });
+    return res.json({
+      success: true,
+      data: { event }
+    });
   } catch (error) {
     next(error);
   }

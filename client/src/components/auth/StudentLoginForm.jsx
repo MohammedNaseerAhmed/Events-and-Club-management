@@ -61,9 +61,9 @@ const StudentLoginForm = () => {
           </Link>
         </p>
         <p className="text-gray-600">
-          Admin?{' '}
-          <Link to="/admin/login" className="text-blue-600 hover:underline">
-            Admin Login
+          Club Admin?{' '}
+          <Link to="/club-admin/login" className="text-blue-600 hover:underline">
+            Club Admin Login
           </Link>
         </p>
       </div>

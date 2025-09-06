@@ -1,13 +1,15 @@
 import mongoose from 'mongoose';
 import Club from '../models/Club.js';
 import Event from '../models/Event.js';
-import { ok } from '../utils/response.js';
 
 // Create a new club
 export const createClub = async (req, res, next) => {
   try {
     const club = await Club.create(req.body);
-    return ok(res, { club }, 201);
+    return res.status(201).json({
+      success: true,
+      data: { club }
+    });
   } catch (error) {
     next(error);
   }
@@ -20,7 +22,10 @@ export const updateClub = async (req, res, next) => {
     if (!club) {
       return res.status(404).json({ message: 'Club not found' });
     }
-    return ok(res, { club });
+    return res.json({
+      success: true,
+      data: { club }
+    });
   } catch (error) {
     next(error);
   }
@@ -33,7 +38,10 @@ export const deleteClub = async (req, res, next) => {
     if (!club) {
       return res.status(404).json({ message: 'Club not found' });
     }
-    return ok(res, { deleted: true });
+    return res.json({
+      success: true,
+      data: { deleted: true }
+    });
   } catch (error) {
     next(error);
   }
@@ -46,7 +54,10 @@ export const getClub = async (req, res, next) => {
     if (!club) {
       return res.status(404).json({ message: 'Club not found' });
     }
-    return ok(res, { club });
+    return res.json({
+      success: true,
+      data: { club }
+    });
   } catch (error) {
     next(error);
   }
@@ -64,11 +75,14 @@ export const listClubs = async (req, res, next) => {
       Club.countDocuments(filter),
     ]);
 
-    return ok(res, {
-      items,
-      total,
-      page: Number(page),
-      pages: Math.ceil(total / Number(limit)),
+    return res.json({
+      success: true,
+      data: {
+        items,
+        total,
+        page: Number(page),
+        pages: Math.ceil(total / Number(limit)),
+      }
     });
   } catch (error) {
     next(error);
@@ -79,7 +93,10 @@ export const listClubs = async (req, res, next) => {
 export const clubEvents = async (req, res, next) => {
   try {
     if (!mongoose.isValidObjectId(req.params.id)) {
-      return ok(res, { items: [] });
+      return res.json({
+        success: true,
+        data: { items: [] }
+      });
     }
     const { page = 1, limit = 10 } = req.query;
     const skip = (Number(page) - 1) * Number(limit);
@@ -89,11 +106,14 @@ export const clubEvents = async (req, res, next) => {
       Event.countDocuments({ clubId: req.params.id }),
     ]);
 
-    return ok(res, {
-      items,
-      total,
-      page: Number(page),
-      pages: Math.ceil(total / Number(limit)),
+    return res.json({
+      success: true,
+      data: {
+        items,
+        total,
+        page: Number(page),
+        pages: Math.ceil(total / Number(limit)),
+      }
     });
   } catch (error) {
     next(error);

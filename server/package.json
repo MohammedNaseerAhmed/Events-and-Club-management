@@ -15,6 +15,7 @@
     "morgan": "^1.10.1",
     "multer": "^2.0.2",
     "multer-s3": "^3.0.1",
+    "nodemailer": "^7.0.6",
     "xss-clean": "^0.1.4"
   },
   "name": "vite-react-js-starter",
@@ -23,9 +24,9 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "vite",
     "build": "vite build",
-    "start": "node src/index.js",
+    "start": "node index.js",
+    "dev": "nodemon index.js",
     "lint": "eslint 'src/**/*.{ts,tsx}'",
     "preview": "vite preview"
   },

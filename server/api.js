@@ -6,6 +6,7 @@ import notificationRoutes from './src/routes/notifications.js';
 import calendarRoutes from './src/routes/calendar.js';
 import uploadRoutes from './src/routes/uploads.js';
 import adminRoutes from './src/routes/admin.js';
+import clubAdminRoutes from './src/routes/clubAdmin.js';
 
 export {
   authRoutes,
@@ -16,4 +17,5 @@ export {
   calendarRoutes,
   uploadRoutes,
   adminRoutes,
+  clubAdminRoutes,
 };

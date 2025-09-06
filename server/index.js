@@ -36,6 +36,7 @@ app.use('/api/notifications', api.notificationRoutes);
 app.use('/api/calendar', api.calendarRoutes);
 app.use('/api/upload', api.uploadRoutes);
 app.use('/api/admin', api.adminRoutes);
+app.use('/api/club-admin', api.clubAdminRoutes);
 
 // 404 handler
 app.use((req, res, next) => next(createError(404, 'Not Found')));

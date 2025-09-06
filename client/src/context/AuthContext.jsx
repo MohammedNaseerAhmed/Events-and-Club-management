@@ -16,7 +16,15 @@ export const AuthProvider = ({ children }) => {
       setStatus('ready');
       return;
     }
+    
+    // Set loading state immediately
     setStatus('loading');
+    
+    // Add timeout to prevent infinite loading
+    const timeoutId = setTimeout(() => {
+      setStatus('ready');
+    }, 5000);
+    
     api.me()
       .then(setUser)
       .catch(() => {
@@ -24,7 +32,10 @@ export const AuthProvider = ({ children }) => {
         setToken('');
         setUser(null);
       })
-      .finally(() => setStatus('ready'));
+      .finally(() => {
+        clearTimeout(timeoutId);
+        setStatus('ready');
+      });
   }, [token]);
 
   const login = async (email, password) => {

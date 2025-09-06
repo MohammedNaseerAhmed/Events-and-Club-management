@@ -1,11 +1,13 @@
 import Notification from '../models/Notification.js';
-import { ok } from '../utils/response.js';
 
 // Create a new notification
 export const createNotification = async (req, res, next) => {
   try {
     const notification = await Notification.create(req.body);
-    return ok(res, { notification }, 201);
+    return res.status(201).json({
+      success: true,
+      data: { notification }
+    });
   } catch (error) {
     next(error);
   }
@@ -18,7 +20,10 @@ export const updateNotification = async (req, res, next) => {
     if (!notification) {
       return res.status(404).json({ message: 'Notification not found' });
     }
-    return ok(res, { notification });
+    return res.json({
+      success: true,
+      data: { notification }
+    });
   } catch (error) {
     next(error);
   }
@@ -31,7 +36,10 @@ export const deleteNotification = async (req, res, next) => {
     if (!notification) {
       return res.status(404).json({ message: 'Notification not found' });
     }
-    return ok(res, { deleted: true });
+    return res.json({
+      success: true,
+      data: { deleted: true }
+    });
   } catch (error) {
     next(error);
   }
@@ -44,7 +52,10 @@ export const getNotification = async (req, res, next) => {
     if (!notification) {
       return res.status(404).json({ message: 'Notification not found' });
     }
-    return ok(res, { notification });
+    return res.json({
+      success: true,
+      data: { notification }
+    });
   } catch (error) {
     next(error);
   }
@@ -64,11 +75,14 @@ export const listNotifications = async (req, res, next) => {
       Notification.countDocuments(filter),
     ]);
 
-    return ok(res, {
-      items,
-      total,
-      page: Number(page),
-      pages: Math.ceil(total / Number(limit)),
+    return res.json({
+      success: true,
+      data: {
+        items,
+        total,
+        page: Number(page),
+        pages: Math.ceil(total / Number(limit)),
+      }
     });
   } catch (error) {
     next(error);
@@ -80,7 +94,10 @@ export const recentNotifications = async (req, res, next) => {
   try {
     const limit = Number(req.query.limit || 10);
     const items = await Notification.find({}).sort({ date: -1 }).limit(limit);
-    return ok(res, { items });
+    return res.json({
+      success: true,
+      data: { items }
+    });
   } catch (error) {
     next(error);
   }

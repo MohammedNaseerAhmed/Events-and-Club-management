@@ -1,11 +1,25 @@
 import React from 'react';
-import { Users, ExternalLink, MapPin, Calendar as CalendarIcon, Award } from 'lucide-react';
+import { Users, ExternalLink, MapPin, Calendar as CalendarIcon, Award, Laptop, BookOpen, Gamepad2, Music, Camera, Code, Heart, Zap } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
 const ClubList = ({ clubs = [] }) => {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
+
+  // Icon mapping for club icons
+  const iconMap = {
+    laptop: Laptop,
+    book: BookOpen,
+    gamepad: Gamepad2,
+    music: Music,
+    camera: Camera,
+    code: Code,
+    heart: Heart,
+    zap: Zap,
+    users: Users,
+    default: Users
+  };
 
   const handleJoinClub = (clubId) => {
     if (!isAuthenticated) return navigate('/login');
@@ -24,7 +38,7 @@ const ClubList = ({ clubs = [] }) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
       {clubs.map(club => {
-            const Icon = club.icon || Users;
+            const Icon = iconMap[club.icon] || iconMap.default;
             return (
               <div
                 key={club._id}
