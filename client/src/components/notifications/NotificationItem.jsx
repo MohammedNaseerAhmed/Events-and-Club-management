@@ -2,10 +2,13 @@ import React from 'react';
 import { Clock, Calendar, Users } from 'lucide-react';
 
 const iconMap = {
-  event: Calendar,
-  reminder: Clock,
-  club: Users,
-  update: Clock,
+  event_approved: Calendar,
+  event_rejected: Calendar,
+  event_registration: Users,
+  invite: Users,
+  invite_accepted: Users,
+  message: Clock,
+  announcement: Calendar,
 };
 
 const NotificationItem = ({ notification }) => {
@@ -21,11 +24,11 @@ const NotificationItem = ({ notification }) => {
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium text-gray-900">{notification.title}</p>
-          {notification.description && (
-            <p className="text-sm text-gray-600 mt-1">{notification.description}</p>
+          {notification.body && (
+            <p className="text-sm text-gray-600 mt-1">{notification.body}</p>
           )}
           <p className="text-xs text-gray-400 mt-2">
-            {notification.date ? new Date(notification.date).toLocaleString() : ''}
+            {notification.createdAt ? new Date(notification.createdAt).toLocaleString() : ''}
           </p>
         </div>
       </div>

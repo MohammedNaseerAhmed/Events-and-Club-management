@@ -2,23 +2,30 @@ import mongoose from 'mongoose';
 
 const notificationSchema = new mongoose.Schema(
   {
-    title: { type: String, required: true },
-    description: { type: String },
-    date: { type: Date, default: Date.now, index: true },
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
     type: {
       type: String,
-      enum: ['event', 'update', 'reminder'],
-      default: 'update',
-      index: true,
+      enum: [
+        'event_approved',
+        'event_rejected',
+        'event_registration',
+        'message',
+        'invite',
+        'invite_accepted',
+        'announcement',
+        'new_post',
+      ],
+      required: true,
     },
+    title: { type: String },
+    body: { type: String },
+    payload: { type: mongoose.Schema.Types.Mixed, default: {} },
+    read: { type: Boolean, default: false, index: true },
     link: { type: String },
-    clubId: { type: mongoose.Schema.Types.ObjectId, ref: 'Club' },
-    eventId: { type: mongoose.Schema.Types.ObjectId, ref: 'Event' },
   },
   { timestamps: true }
 );
 
-// Index to sort notifications by most recent
-notificationSchema.index({ date: -1 });
+notificationSchema.index({ userId: 1, createdAt: -1 });
 
 export default mongoose.model('Notification', notificationSchema);

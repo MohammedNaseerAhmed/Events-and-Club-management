@@ -5,76 +5,73 @@ const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(() => localStorage.getItem('token') || '');
-  const [user, setUser] = useState(null);
-  const [status, setStatus] = useState('idle'); // idle | loading | ready
+  const [user, setUser] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('user') || 'null'); } catch { return null; }
+  });
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [status, setStatus] = useState('idle');
 
   const isAuthenticated = !!user;
 
   useEffect(() => {
-    if (!token) {
-      setUser(null);
-      setStatus('ready');
-      return;
-    }
-    
-    // Set loading state immediately
+    if (!token) { setUser(null); setStatus('ready'); return; }
     setStatus('loading');
-    
-    // Add timeout to prevent infinite loading
-    const timeoutId = setTimeout(() => {
-      setStatus('ready');
-    }, 5000);
-    
-    api.me()
-      .then(setUser)
+    api.get('/auth/me')
+      .then((res) => {
+        const { user: u, unreadCount: uc } = res.data.data;
+        setUser(u);
+        setUnreadCount(uc || 0);
+        localStorage.setItem('user', JSON.stringify(u));
+      })
       .catch(() => {
         localStorage.removeItem('token');
+        localStorage.removeItem('user');
         setToken('');
         setUser(null);
       })
-      .finally(() => {
-        clearTimeout(timeoutId);
-        setStatus('ready');
-      });
+      .finally(() => setStatus('ready'));
   }, [token]);
 
   const login = async (email, password) => {
-    const data = await api.login(email, password);
-    if (!data || !data.token) {
-      throw new Error('Login failed: No token received');
-    }
-    localStorage.setItem('token', data.token);
-    setToken(data.token);
-    setUser(data.user);
-    return data;
+    const res = await api.post('/auth/login', { email, password });
+    const { token: t, user: u } = res.data.data;
+    localStorage.setItem('token', t);
+    localStorage.setItem('user', JSON.stringify(u));
+    setToken(t);
+    setUser(u);
+    return res.data.data;
   };
 
-  const register = async (name, email, password, role = 'student') => {
-    const data = await api.register(name, email, password, role);
-    if (!data || !data.token) {
-      throw new Error('Register failed: No token received');
-    }
-    localStorage.setItem('token', data.token);
-    setToken(data.token);
-    setUser(data.user);
-    return data;
+  const register = async (name, username, email, password, role = 'student') => {
+    const res = await api.post('/auth/register', { name, username, email, password, role });
+    const { token: t, user: u } = res.data.data;
+    localStorage.setItem('token', t);
+    localStorage.setItem('user', JSON.stringify(u));
+    setToken(t);
+    setUser(u);
+    return res.data.data;
   };
 
   const logout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('user');
     setToken('');
     setUser(null);
+    setUnreadCount(0);
+  };
+
+  const updateUser = (updates) => {
+    setUser((prev) => {
+      const updated = { ...prev, ...updates };
+      localStorage.setItem('user', JSON.stringify(updated));
+      return updated;
+    });
   };
 
   const value = useMemo(() => ({
-    token,
-    user,
-    status,
-    login,
-    register,
-    logout,
-    isAuthenticated,
-  }), [token, user, status]);
+    token, user, status, login, register, logout, updateUser,
+    isAuthenticated, unreadCount, setUnreadCount,
+  }), [token, user, status, unreadCount]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

@@ -323,7 +323,9 @@ const EventManagementSection = ({ onDataChange }) => {
                   <div className="text-sm font-medium text-gray-900">{event.title}</div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {new Date(event.date).toLocaleDateString()}
+                  {event.startDate
+                    ? new Date(event.startDate).toLocaleDateString()
+                    : 'TBA'}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   {event.venue || 'TBA'}
@@ -332,7 +334,9 @@ const EventManagementSection = ({ onDataChange }) => {
                   {event.clubId?.name || 'Unknown'}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {event.attendees?.length || 0}
+                  {typeof event.registrationCount === 'number'
+                    ? event.registrationCount
+                    : 0}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
                   <span className={`px-2 py-1 rounded-full text-xs font-medium ${
@@ -395,11 +399,16 @@ const EventForm = ({ clubs, event, onSubmit, onCancel }) => {
   const [formData, setFormData] = useState({
     title: event?.title || '',
     description: event?.description || '',
-    date: event?.date ? new Date(event.date).toISOString().split('T')[0] : '',
-    time: event?.time || '',
+    startDate: event?.startDate
+      ? new Date(event.startDate).toISOString().slice(0, 16)
+      : '',
+    endDate: event?.endDate
+      ? new Date(event.endDate).toISOString().slice(0, 16)
+      : '',
     venue: event?.venue || '',
     clubId: event?.clubId?._id || event?.clubId || '',
-    status: event?.status || 'approved'
+    status: event?.status || 'pending',
+    capacity: event?.capacity || '',
   });
 
   const handleSubmit = (e) => {
@@ -464,22 +473,21 @@ const EventForm = ({ clubs, event, onSubmit, onCancel }) => {
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
             <input
-              type="date"
-              name="date"
-              value={formData.date}
+              type="datetime-local"
+              name="startDate"
+              value={formData.startDate}
               onChange={handleChange}
               required
               className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Time</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">End</label>
             <input
-              type="text"
-              name="time"
-              value={formData.time}
+              type="datetime-local"
+              name="endDate"
+              value={formData.endDate}
               onChange={handleChange}
-              placeholder="e.g., 10:00 AM - 6:00 PM"
               className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
@@ -490,6 +498,17 @@ const EventForm = ({ clubs, event, onSubmit, onCancel }) => {
               name="venue"
               value={formData.venue}
               onChange={handleChange}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Capacity</label>
+            <input
+              type="number"
+              name="capacity"
+              value={formData.capacity}
+              onChange={handleChange}
+              min="0"
               className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>

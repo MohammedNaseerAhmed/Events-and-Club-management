@@ -1,133 +1,135 @@
 import User from '../models/User.js';
 import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
-import dotenv from 'dotenv';
-dotenv.config();
+import Registration from '../models/Registration.js';
 
-// Helper: Generate JWT token
-const generateToken = (user) => {
-  return jwt.sign(
-    { id: user._id, role: user.role },
-    process.env.JWT_SECRET,
-    { expiresIn: '7d' }
-  );
-};
-
-// REGISTER: Create a new user
-export const register = async (req, res) => {
+// GET /api/users/:username — enforce privacySettings.profileVisible
+export const getUserProfile = async (req, res, next) => {
   try {
-    const { name, email, password, role } = req.body;
+    const user = await User.findOne({ username: req.params.username })
+      .select('-passwordHash -notificationSettings')
+      .populate('organizationsOwned', 'name shortName logoUrl type')
+      .populate('followingOrgs', 'name shortName logoUrl');
+    if (!user) return res.status(404).json({ success: false, error: { message: 'User not found' } });
 
-    // Check if user already exists
-    if (await User.findOne({ email })) {
-      return res.status(400).json({ message: 'Email already registered' });
+    const profileVisible = user.privacySettings?.profileVisible;
+    if (profileVisible === false) {
+      const isSelf = req.user && req.user._id.toString() === user._id.toString();
+      if (!isSelf) return res.status(403).json({ success: false, error: { message: 'Profile is not visible' } });
     }
 
-    // Hash the password
-    const salt = await bcrypt.genSalt(10);
-    const passwordHash = await bcrypt.hash(password, salt);
-
-    // Create the user
-    const user = await User.create({ name, email, passwordHash, role });
-
-    // Generate JWT token
-    const token = generateToken(user);
-
-    res.status(201).json({
-      token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        avatarUrl: user.avatarUrl,
-      },
-    });
+    res.json({ success: true, data: { user } });
   } catch (err) {
-    console.error('Registration Error:', err);
-    res.status(500).json({ message: 'Server error during registration' });
+    next(err);
   }
 };
 
-// LOGIN: Authenticate user and generate token
-export const login = async (req, res) => {
+// PATCH /api/users/me  (personal details)
+export const updateProfile = async (req, res, next) => {
   try {
-    const { email, password } = req.body;
-
-    // Find user by email
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(400).json({ message: 'Invalid email or password' });
-    }
-
-    // Verify password
-    const isMatch = await bcrypt.compare(password, user.passwordHash);
-    if (!isMatch) {
-      return res.status(400).json({ message: 'Invalid email or password' });
-    }
-
-    // Generate JWT token
-    const token = generateToken(user);
-
-    res.status(200).json({
-      token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        avatarUrl: user.avatarUrl,
-      },
-    });
+    const allowed = ['name', 'bio', 'headline', 'profilePicUrl'];
+    const update = {};
+    allowed.forEach((f) => { if (req.body[f] !== undefined) update[f] = req.body[f]; });
+    const user = await User.findByIdAndUpdate(req.user._id, update, { new: true }).select('-passwordHash');
+    res.json({ success: true, data: { user } });
   } catch (err) {
-    console.error('Login Error:', err);
-    res.status(500).json({ message: 'Server error during login' });
+    next(err);
   }
 };
 
-// GET CURRENT USER PROFILE
-export const me = async (req, res) => {
+// PATCH /api/users/me/password
+export const changePassword = async (req, res, next) => {
   try {
-    const user = await User.findById(req.user.id).select('-passwordHash');
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+    const { currentPassword, newPassword } = req.body;
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ success: false, error: { message: 'currentPassword and newPassword required' } });
     }
-    res.json(user);
+    const user = await User.findById(req.user._id);
+    const isMatch = await bcrypt.compare(currentPassword, user.passwordHash);
+    if (!isMatch) return res.status(400).json({ success: false, error: { message: 'Current password is incorrect' } });
+
+    const salt = await bcrypt.genSalt(12);
+    user.passwordHash = await bcrypt.hash(newPassword, salt);
+    await user.save();
+    res.json({ success: true, data: { message: 'Password changed successfully' } });
   } catch (err) {
-    console.error('Fetch User Error:', err);
-    res.status(500).json({ message: 'Server error fetching user' });
+    next(err);
   }
 };
 
-// LOGOUT: Client handles token removal; endpoint just confirms
-export const logout = (req, res) => {
-  res.json({ message: 'Logout successful' });
-};
-export const updateMe = async (req, res) => {
+// PATCH /api/users/me/privacy
+export const updatePrivacy = async (req, res, next) => {
   try {
-    // Filter out fields that should not be updated here (e.g., password)
-    const allowedUpdates = ['name', 'email', 'avatarUrl'];
-    const updates = {};
-
-    allowedUpdates.forEach((field) => {
-      if (req.body[field] !== undefined) {
-        updates[field] = req.body[field];
-      }
-    });
-
-    const updatedUser = await User.findByIdAndUpdate(
-      req.user.id,
-      updates,
+    const { profileVisible, activityVisible } = req.body;
+    const user = await User.findByIdAndUpdate(
+      req.user._id,
+      { privacySettings: { profileVisible: profileVisible ?? true, activityVisible: activityVisible ?? true } },
       { new: true }
     ).select('-passwordHash');
+    res.json({ success: true, data: { user } });
+  } catch (err) {
+    next(err);
+  }
+};
 
-    if (!updatedUser) {
-      return res.status(404).json({ message: 'User not found' });
-    }
+// PATCH /api/users/me/notifications
+export const updateNotificationSettings = async (req, res, next) => {
+  try {
+    const { email, push } = req.body;
+    const user = await User.findByIdAndUpdate(
+      req.user._id,
+      { notificationSettings: { email: email ?? true, push: push ?? true } },
+      { new: true }
+    ).select('-passwordHash');
+    res.json({ success: true, data: { user } });
+  } catch (err) {
+    next(err);
+  }
+};
 
-    return res.json(updatedUser);
-  } catch (error) {
-    console.error('Update user error:', error);
-    return res.status(500).json({ message: 'Server error updating user' });
+// POST /api/users/me/follow-org/:orgId
+export const followOrg = async (req, res, next) => {
+  try {
+    const { orgId } = req.params;
+    await User.findByIdAndUpdate(req.user._id, { $addToSet: { followingOrgs: orgId } });
+    res.json({ success: true, data: { message: 'Following organization' } });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// DELETE /api/users/me/follow-org/:orgId
+export const unfollowOrg = async (req, res, next) => {
+  try {
+    const { orgId } = req.params;
+    await User.findByIdAndUpdate(req.user._id, { $pull: { followingOrgs: orgId } });
+    res.json({ success: true, data: { message: 'Unfollowed organization' } });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// DELETE /api/users/me  (delete account)
+export const deleteAccount = async (req, res, next) => {
+  try {
+    const { password } = req.body;
+    const user = await User.findById(req.user._id);
+    const isMatch = await bcrypt.compare(password, user.passwordHash);
+    if (!isMatch) return res.status(400).json({ success: false, error: { message: 'Password incorrect' } });
+    await User.findByIdAndDelete(req.user._id);
+    res.json({ success: true, data: { message: 'Account deleted' } });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// GET /api/users/me/registrations
+export const getMyRegistrations = async (req, res, next) => {
+  try {
+    const regs = await Registration.find({ studentId: req.user._id, status: 'registered' })
+      .populate({ path: 'eventId', populate: { path: 'clubId', select: 'name shortName' } })
+      .sort({ registeredAt: -1 });
+    res.json({ success: true, data: { registrations: regs } });
+  } catch (err) {
+    next(err);
   }
 };

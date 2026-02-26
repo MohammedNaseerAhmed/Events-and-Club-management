@@ -12,6 +12,8 @@ const EventCard = ({ event, onRegister, showRegisterButton = false }) => {
     return colors[category] || 'bg-gray-100 text-gray-800';
   };
 
+  const start = event.startDate ? new Date(event.startDate) : null;
+
   return (
     <div
       className={`bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden group ${
@@ -47,12 +49,16 @@ const EventCard = ({ event, onRegister, showRegisterButton = false }) => {
           <div className="flex items-center text-gray-600">
             <Calendar className="w-4 h-4 mr-2 text-blue-500" />
             <span className="text-sm">
-              {event.date ? new Date(event.date).toLocaleDateString() : 'TBA'}
+              {start ? start.toLocaleDateString() : 'TBA'}
             </span>
           </div>
           <div className="flex items-center text-gray-600">
             <Clock className="w-4 h-4 mr-2 text-purple-500" />
-            <span className="text-sm">{event.time || 'To be announced'}</span>
+            <span className="text-sm">
+              {start
+                ? start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                : 'To be announced'}
+            </span>
           </div>
           <div className="flex items-center text-gray-600">
             <MapPin className="w-4 h-4 mr-2 text-green-500" />
@@ -60,7 +66,9 @@ const EventCard = ({ event, onRegister, showRegisterButton = false }) => {
           </div>
           <div className="flex items-center text-gray-600">
             <Users className="w-4 h-4 mr-2 text-orange-500" />
-            <span className="text-sm">{event.organizer || 'Organizer TBA'}</span>
+            <span className="text-sm">
+              {event.clubId?.name || event.organizer || 'Organizer TBA'}
+            </span>
           </div>
         </div>
 
