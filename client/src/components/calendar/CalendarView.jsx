@@ -30,7 +30,7 @@ const CalendarView = ({ events = [] }) => {
   const getEventsForDate = (date) => {
     if (!date) return [];
     return events.filter(event => {
-      const eventDate = new Date(event.date);
+      const eventDate = new Date(event.startDate || event.date);
       return eventDate.toDateString() === date.toDateString();
     });
   };
@@ -151,7 +151,11 @@ const CalendarView = ({ events = [] }) => {
                   <div className="flex items-center space-x-4 text-xs text-gray-500">
                     <div className="flex items-center space-x-1">
                       <Clock className="w-3 h-3" />
-                      <span>{new Date(event.date).toLocaleDateString()}</span>
+                      <span>
+                        {event.startDate
+                          ? new Date(event.startDate).toLocaleDateString()
+                          : 'TBA'}
+                      </span>
                     </div>
                     {event.venue && (
                       <div className="flex items-center space-x-1">

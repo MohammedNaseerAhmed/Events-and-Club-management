@@ -1,107 +1,87 @@
 import User from '../models/User.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import dotenv from 'dotenv';
+import Notification from '../models/Notification.js';
 
-dotenv.config();
+const generateToken = (user, expiresIn = '7d') =>
+  jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn });
 
-// Helper: Generate JWT token
-const generateToken = (user) => {
-  return jwt.sign(
-    { id: user._id, role: user.role },
-    process.env.JWT_SECRET,
-    { expiresIn: '7d' }
-  );
-};
+const safeUser = (user) => ({
+  id: user._id,
+  name: user.name,
+  username: user.username,
+  email: user.email,
+  role: user.role,
+  profilePicUrl: user.profilePicUrl,
+  bio: user.bio,
+  headline: user.headline,
+  organizationsOwned: user.organizationsOwned,
+  followingOrgs: user.followingOrgs,
+});
 
-// REGISTER: Create a new user account and return JWT token
-export const register = async (req, res) => {
+// POST /api/auth/register
+export const register = async (req, res, next) => {
   try {
-    const { name, email, password, role } = req.body;
-
-    // Check if user already exists
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ message: 'Email already registered' });
+    const { name, username, email, password, role } = req.body;
+    if (!name || !username || !email || !password) {
+      return res.status(400).json({ success: false, error: { message: 'name, username, email, password are required' } });
     }
 
-    // Hash the user's password
-    const salt = await bcrypt.genSalt(10);
+    const emailExists = await User.findOne({ email });
+    if (emailExists) return res.status(400).json({ success: false, error: { message: 'Email already registered' } });
+
+    const usernameExists = await User.findOne({ username: username.toLowerCase() });
+    if (usernameExists) return res.status(400).json({ success: false, error: { message: 'Username already taken' } });
+
+    const allowedRoles = ['student', 'clubHead', 'admin'];
+    const userRole = allowedRoles.includes(role) ? role : 'student';
+
+    const salt = await bcrypt.genSalt(12);
     const passwordHash = await bcrypt.hash(password, salt);
 
-    // Create new user document in database
-    const user = await User.create({ name, email, passwordHash, role });
-
-    // Generate JWT token for the new user
+    const user = await User.create({ name, username: username.toLowerCase(), email, passwordHash, role: userRole });
     const token = generateToken(user);
 
-    res.status(201).json({
-      token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        avatarUrl: user.avatarUrl,
-      },
-    });
+    res.status(201).json({ success: true, data: { token, user: safeUser(user) } });
   } catch (err) {
-    console.error('Registration error:', err);
-    res.status(500).json({ message: 'Server error during registration' });
+    next(err);
   }
 };
 
-// LOGIN: Authenticate user with email and password and return JWT token
-export const login = async (req, res) => {
+// POST /api/auth/login
+export const login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ success: false, error: { message: 'Email and password required' } });
+    }
 
-    // Find user by email
     const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(400).json({ message: 'Invalid email or password' });
-    }
+    if (!user) return res.status(400).json({ success: false, error: { message: 'Invalid credentials' } });
 
-    // Compare plaintext password to hashed password
     const isMatch = await bcrypt.compare(password, user.passwordHash);
-    if (!isMatch) {
-      return res.status(400).json({ message: 'Invalid email or password' });
-    }
+    if (!isMatch) return res.status(400).json({ success: false, error: { message: 'Invalid credentials' } });
 
-    // Generate JWT token for authenticated user
     const token = generateToken(user);
-
-    res.status(200).json({
-      token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        avatarUrl: user.avatarUrl,
-      },
-    });
+    res.json({ success: true, data: { token, user: safeUser(user) } });
   } catch (err) {
-    console.error('Login error:', err);
-    res.status(500).json({ message: 'Server error during login' });
+    next(err);
   }
 };
 
-// GET CURRENT USER: Returns profile of logged-in user excluding password hash
-export const me = async (req, res) => {
+// GET /api/auth/me
+export const me = async (req, res, next) => {
   try {
-    const user = await User.findById(req.user.id).select('-passwordHash');
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-    res.json(user);
+    const user = await User.findById(req.user.id).select('-passwordHash').populate('organizationsOwned', 'name shortName logoUrl');
+    if (!user) return res.status(404).json({ success: false, error: { message: 'User not found' } });
+    // Unread notification count
+    const unreadCount = await Notification.countDocuments({ userId: user._id, read: false });
+    res.json({ success: true, data: { user, unreadCount } });
   } catch (err) {
-    console.error('Fetch user error:', err);
-    res.status(500).json({ message: 'Server error fetching user' });
+    next(err);
   }
 };
 
-// LOGOUT: Client handles logout by discarding token, server endpoint confirms
 export const logout = (req, res) => {
-  res.json({ message: 'Logout successful' });
+  res.json({ success: true, data: { message: 'Logged out successfully' } });
 };

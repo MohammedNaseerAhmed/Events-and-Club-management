@@ -201,7 +201,7 @@ const ClubAdminDashboard = () => {
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Upcoming Events</p>
                 <p className="text-2xl font-semibold text-gray-900">
-                  {events.filter(event => new Date(event.date) > new Date()).length}
+                  {events.filter(event => event.startDate && new Date(event.startDate) > new Date()).length}
                 </p>
               </div>
             </div>
@@ -267,13 +267,17 @@ const ClubAdminDashboard = () => {
                       <div className="text-sm font-medium text-gray-900">{event.title}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {new Date(event.date).toLocaleDateString()}
+                      {event.startDate
+                        ? new Date(event.startDate).toLocaleDateString()
+                        : 'TBA'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {event.venue || 'TBA'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {event.attendees?.length || 0}
+                      {typeof event.registrationCount === 'number'
+                        ? event.registrationCount
+                        : 0}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {event.poster ? (
@@ -452,9 +456,14 @@ const EventForm = ({ event, onSubmit, onCancel }) => {
   const [formData, setFormData] = useState({
     title: event?.title || '',
     description: event?.description || '',
-    date: event?.date ? new Date(event.date).toISOString().split('T')[0] : '',
-    time: event?.time || '',
-    venue: event?.venue || ''
+    startDate: event?.startDate
+      ? new Date(event.startDate).toISOString().slice(0, 16)
+      : '',
+    endDate: event?.endDate
+      ? new Date(event.endDate).toISOString().slice(0, 16)
+      : '',
+    venue: event?.venue || '',
+    capacity: event?.capacity || '',
   });
 
   const handleSubmit = (e) => {
@@ -488,11 +497,11 @@ const EventForm = ({ event, onSubmit, onCancel }) => {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Start</label>
             <input
-              type="date"
-              name="date"
-              value={formData.date}
+              type="datetime-local"
+              name="startDate"
+              value={formData.startDate}
               onChange={handleChange}
               required
               className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -501,7 +510,7 @@ const EventForm = ({ event, onSubmit, onCancel }) => {
         </div>
         
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
           <textarea
             name="description"
             value={formData.description}
@@ -513,18 +522,28 @@ const EventForm = ({ event, onSubmit, onCancel }) => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Time</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">End</label>
             <input
-              type="text"
-              name="time"
-              value={formData.time}
+              type="datetime-local"
+              name="endDate"
+              value={formData.endDate}
               onChange={handleChange}
-              placeholder="e.g., 10:00 AM - 6:00 PM"
               className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Venue</label>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Capacity</label>
+            <input
+              type="number"
+              name="capacity"
+              value={formData.capacity}
+              onChange={handleChange}
+              min="0"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
             <input
               type="text"
               name="venue"

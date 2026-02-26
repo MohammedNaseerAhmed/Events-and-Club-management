@@ -1,49 +1,41 @@
 import express from 'express';
-import { auth, requireRole } from '../middleware/auth.js';
+import { authenticate, ensureRole } from '../middleware/auth.js';
+import { organizationCreateValidator, organizationUpdateValidator } from '../middleware/validators.js';
 import {
-  listUsers,
-  updateUser,
-  deleteUser,
-} from '../controllers/adminController.js';
-import {
-  listClubs,
-  updateClub,
-  deleteClub,
-} from '../controllers/adminController.js';
-import {
-  listEvents,
-  updateEvent,
-  deleteEvent,
-} from '../controllers/adminController.js';
-import {
-  listNotifications,
-  updateNotification,
-  deleteNotification,
+  createOrganization, listOrganizations, updateOrganization, deleteOrganization,
+  assignHead, removeHead,
+  getPendingEvents, getAllEvents, approveEvent, rejectEvent,
+  listUsers, updateUserRole, deleteUser, getAuditLogs, getStats,
 } from '../controllers/adminController.js';
 
 const router = express.Router();
 
-// Apply authentication and admin role verification globally to all admin routes
-router.use(auth, requireRole('admin'));
+// All admin routes require authentication + admin role
+router.use(authenticate, ensureRole('admin'));
 
-// User management routes
+// Stats
+router.get('/stats', getStats);
+
+// Organizations
+router.post('/organizations', organizationCreateValidator, createOrganization);
+router.get('/organizations', listOrganizations);
+router.patch('/organizations/:id', organizationUpdateValidator, updateOrganization);
+router.delete('/organizations/:id', deleteOrganization);
+router.post('/organizations/:id/assign-head', assignHead);
+router.post('/organizations/:id/remove-head', removeHead);
+
+// Events
+router.get('/events', getAllEvents);
+router.get('/events/pending', getPendingEvents);
+router.post('/events/:eventId/approve', approveEvent);
+router.post('/events/:eventId/reject', rejectEvent);
+
+// Users
 router.get('/users', listUsers);
-router.put('/users/:id', updateUser);
+router.patch('/users/:id', updateUserRole);
 router.delete('/users/:id', deleteUser);
 
-// Club management routes
-router.get('/clubs', listClubs);
-router.put('/clubs/:id', updateClub);
-router.delete('/clubs/:id', deleteClub);
-
-// Event management routes
-router.get('/events', listEvents);
-router.put('/events/:id', updateEvent);
-router.delete('/events/:id', deleteEvent);
-
-// Notification management routes
-router.get('/notifications', listNotifications);
-router.put('/notifications/:id', updateNotification);
-router.delete('/notifications/:id', deleteNotification);
+// Audit logs
+router.get('/audit-logs', getAuditLogs);
 
 export default router;

@@ -108,12 +108,21 @@ const EventDetailsPage = () => {
               <div className="flex items-center space-x-4">
                 <div className="flex items-center space-x-1">
                   <Calendar className="w-4 h-4" />
-                  <span>{new Date(event.date).toLocaleDateString()}</span>
+                  <span>
+                    {event.startDate
+                      ? new Date(event.startDate).toLocaleDateString()
+                      : 'Date TBA'}
+                  </span>
                 </div>
-                {event.time && (
+                {event.startDate && (
                   <div className="flex items-center space-x-1">
                     <Clock className="w-4 h-4" />
-                    <span>{event.time}</span>
+                    <span>
+                      {new Date(event.startDate).toLocaleTimeString([], {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                    </span>
                   </div>
                 )}
               </div>
@@ -134,16 +143,30 @@ const EventDetailsPage = () => {
                     <Calendar className="w-5 h-5 text-blue-600" />
                     <div>
                       <p className="font-medium text-gray-800">Date</p>
-                      <p className="text-gray-600">{new Date(event.date).toLocaleDateString()}</p>
+                      <p className="text-gray-600">
+                        {event.startDate
+                          ? new Date(event.startDate).toLocaleDateString()
+                          : 'Date TBA'}
+                      </p>
                     </div>
                   </div>
 
-                  {event.time && (
+                  {event.startDate && (
                     <div className="flex items-center space-x-3">
                       <Clock className="w-5 h-5 text-purple-600" />
                       <div>
                         <p className="font-medium text-gray-800">Time</p>
-                        <p className="text-gray-600">{event.time}</p>
+                        <p className="text-gray-600">
+                          {new Date(event.startDate).toLocaleTimeString([], {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                          {event.endDate &&
+                            ` – ${new Date(event.endDate).toLocaleTimeString([], {
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })}`}
+                        </p>
                       </div>
                     </div>
                   )}
@@ -162,7 +185,9 @@ const EventDetailsPage = () => {
                     <Users className="w-5 h-5 text-orange-600" />
                     <div>
                       <p className="font-medium text-gray-800">Attendees</p>
-                      <p className="text-gray-600">{event.attendees?.length || 0} people registered</p>
+                      <p className="text-gray-600">
+                        {event.registrationCount || 0} / {event.capacity || '∞'} registered
+                      </p>
                     </div>
                   </div>
                 </div>
