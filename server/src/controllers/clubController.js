@@ -117,8 +117,14 @@ export const clubEvents = async (req, res, next) => {
     const skip = (Number(page) - 1) * Number(limit);
 
     const [items, total] = await Promise.all([
-      Event.find({ clubId: req.params.id }).sort({ date: 1 }).skip(skip).limit(Number(limit)),
-      Event.countDocuments({ clubId: req.params.id }),
+      Event.find({
+        clubId: req.params.id,
+        $or: [{ status: 'approved' }, { status: 'completed' }, { status: { $exists: false } }],
+      }).sort({ date: 1 }).skip(skip).limit(Number(limit)),
+      Event.countDocuments({
+        clubId: req.params.id,
+        $or: [{ status: 'approved' }, { status: 'completed' }, { status: { $exists: false } }],
+      }),
     ]);
 
     return res.json({

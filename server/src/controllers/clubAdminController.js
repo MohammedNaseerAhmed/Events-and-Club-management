@@ -122,7 +122,8 @@ const createEvent = async (req, res) => {
     const eventData = {
       ...req.body,
       clubId: clubAdmin.clubId,
-      createdBy: req.user.id
+      createdBy: req.user.id,
+      status: 'pending'
     };
 
     const event = new Event(eventData);

@@ -1,4 +1,5 @@
 import express from 'express';
+import { auth, requireRole } from '../middleware/auth.js';
 import {
   createEvent,
   updateEvent,
@@ -11,10 +12,8 @@ import {
 
 const router = express.Router();
 
-// TODO: Protect routes with authentication and optionally admin authorization where needed
-
 // Create a new event (Admin or authorized users)
-router.post('/', createEvent);
+router.post('/', auth, requireRole('admin'), createEvent);
 
 // Get upcoming events (MUST be before /:id route)
 router.get('/upcoming', upcomingEvents);
@@ -23,15 +22,15 @@ router.get('/upcoming', upcomingEvents);
 router.get('/', listEvents);
 
 // Update event by ID
-router.put('/:id', updateEvent);
+router.put('/:id', auth, requireRole('admin'), updateEvent);
 
 // Delete event by ID
-router.delete('/:id', deleteEvent);
+router.delete('/:id', auth, requireRole('admin'), deleteEvent);
 
 // Get event details by ID
 router.get('/:id', getEvent);
 
 // Register current user for an event by event ID
-router.post('/:id/register', registerForEvent);
+router.post('/:id/register', auth, registerForEvent);
 
 export default router;

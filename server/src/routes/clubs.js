@@ -1,4 +1,5 @@
 import express from 'express';
+import { auth, requireRole } from '../middleware/auth.js';
 import {
   createClub,
   updateClub,
@@ -10,16 +11,14 @@ import {
 
 const router = express.Router();
 
-// TODO: Add authentication and admin authorization middleware as needed
-
 // Create a new club (Admin only)
-router.post('/', createClub);
+router.post('/', auth, requireRole('admin'), createClub);
 
 // Update club details by ID (Admin only)
-router.put('/:id', updateClub);
+router.put('/:id', auth, requireRole('admin'), updateClub);
 
 // Delete a club by ID (Admin only)
-router.delete('/:id', deleteClub);
+router.delete('/:id', auth, requireRole('admin'), deleteClub);
 
 // Get club details by ID (public)
 router.get('/:id', getClub);

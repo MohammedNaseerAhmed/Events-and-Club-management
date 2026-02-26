@@ -70,7 +70,7 @@ export const deleteClub = async (req, res, next) => {
 
 export const listEvents = async (req, res, next) => {
   try {
-    const events = await Event.find();
+    const events = await Event.find().populate('clubId', 'name category').sort({ createdAt: -1 });
     return ok(res, events);
   } catch (error) {
     next(error);

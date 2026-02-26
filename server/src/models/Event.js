@@ -9,6 +9,12 @@ const eventSchema = new mongoose.Schema(
     date: { type: Date, required: true, index: true },
     time: { type: String },
     venue: { type: String },
+    status: {
+      type: String,
+      enum: ['pending', 'approved', 'completed'],
+      default: 'pending',
+      index: true,
+    },
     clubId: { type: mongoose.Schema.Types.ObjectId, ref: 'Club', required: true, index: true },
     attendees: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User', index: true }],
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'ClubAdmin', index: true },

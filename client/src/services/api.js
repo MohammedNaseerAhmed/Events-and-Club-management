@@ -131,6 +131,22 @@ const api = {
     if (!res.ok) throw new Error(json?.error?.message || 'Fetch users failed');
     return json.data; // Backend returns { success: true, data: [...] }
   },
+  listAdminEvents: async () => {
+    const res = await fetch(`${API_BASE_URL}/api/admin/events`, { headers: defaultHeaders() });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json?.error?.message || 'Fetch admin events failed');
+    return json.data;
+  },
+  updateAdminEventStatus: async (eventId, status) => {
+    const res = await fetch(`${API_BASE_URL}/api/admin/events/${eventId}`, {
+      method: 'PUT',
+      headers: defaultHeaders(),
+      body: JSON.stringify({ status }),
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json?.error?.message || 'Update event status failed');
+    return json.data;
+  },
 
   // Club Admin API functions
   getClubAdminClub: async () => {

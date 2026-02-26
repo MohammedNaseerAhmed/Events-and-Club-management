@@ -6,7 +6,7 @@ const clubSchema = new mongoose.Schema(
     description: { type: String, trim: true },
     category: {
       type: String,
-      enum: ['technical', 'cultural', 'sports', 'workshop'],
+      enum: ['technical', 'cultural', 'sports', 'workshop', 'organization'],
       required: true,
     },
     members: { type: Number, default: 0 },

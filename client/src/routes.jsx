@@ -20,6 +20,14 @@ const AdminLoginForm = lazy(() => import('./components/auth/AdminLoginForm'));
 const ClubAdminLoginForm = lazy(() => import('./components/auth/ClubAdminLoginForm'));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
 const ClubAdminDashboard = lazy(() => import('./pages/ClubAdminDashboard'));
+const Feed = lazy(() => import('./pages/Feed'));
+const NetworkInvitations = lazy(() => import('./pages/NetworkInvitations'));
+const Chats = lazy(() => import('./pages/Chats'));
+const Notifications = lazy(() => import('./pages/Notifications'));
+const Documents = lazy(() => import('./pages/Documents'));
+const Courses = lazy(() => import('./pages/Courses'));
+const SettingsSection = lazy(() => import('./pages/SettingsSection'));
+const UserProfile = lazy(() => import('./pages/UserProfile'));
 
 // Enhanced loading component
 const LoadingSpinner = () => (
@@ -50,11 +58,19 @@ const RouterConfig = () => (
       {/* Public Routes with Layout */}
       <Route element={<DashboardLayout />}>
         <Route path="/" element={<Hero />} />
+        <Route path="/feed" element={<ProtectedRoute><Feed /></ProtectedRoute>} />
+        <Route path="/network/invitations" element={<ProtectedRoute><NetworkInvitations /></ProtectedRoute>} />
+        <Route path="/chats" element={<ProtectedRoute><Chats /></ProtectedRoute>} />
+        <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
         <Route path="/events" element={<Events />} />
         <Route path="/events/:id" element={<EventDetails />} />
+        <Route path="/documents" element={<ProtectedRoute><Documents /></ProtectedRoute>} />
+        <Route path="/courses" element={<ProtectedRoute><Courses /></ProtectedRoute>} />
+        <Route path="/settings/:section" element={<ProtectedRoute><SettingsSection /></ProtectedRoute>} />
         <Route path="/calendar" element={<Calendar />} />
         <Route path="/clubs" element={<Clubs />} />
         <Route path="/clubs/:id" element={<ClubDetails />} />
+        <Route path="/:username" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
         <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>
