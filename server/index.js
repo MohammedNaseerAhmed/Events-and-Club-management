@@ -13,8 +13,22 @@ loadEnv();
 
 const app = express();
 
+const parseAllowedOrigins = (value) => {
+  if (!value) return [];
+  return value
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+};
+
+const allowedOrigins = parseAllowedOrigins(process.env.CORS_ORIGIN);
+const corsOptions = {
+  origin: allowedOrigins.length ? allowedOrigins : true,
+  credentials: true,
+};
+
 // Middleware setup
-app.use(cors({ origin: process.env.CORS_ORIGIN || '*', credentials: true }));
+app.use(cors(corsOptions));
 app.use(helmet());
 app.use(express.json({ limit: '2mb' }));
 app.use(express.urlencoded({ extended: true }));
@@ -43,11 +57,11 @@ app.use((req, res, next) => next(createError(404, 'Not Found')));
 
 // Global error handler
 app.use((err, req, res, next) => {
-  console.error("❌ Error in request:", req.method, req.url);
+  console.error('Error in request:', req.method, req.url);
   console.error(err.stack);
   res.status(err.status || 500).json({
     success: false,
-    error: { message: err.message || "Internal Server Error" }
+    error: { message: err.message || 'Internal Server Error' }
   });
 });
 

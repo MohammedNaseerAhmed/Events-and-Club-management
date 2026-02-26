@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 import EventList from './EventList';
@@ -16,12 +16,7 @@ const EventsPage = () => {
     date: ''
   });
 
-  useEffect(() => {
-    loadEvents();
-    loadUpcomingEvents();
-  }, [filters]);
-
-  const loadEvents = async () => {
+  const loadEvents = useCallback(async () => {
     try {
       setLoading(true);
       setError('');
@@ -33,7 +28,17 @@ const EventsPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters]);
+
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      loadEvents();
+    }, 300);
+    
+    loadUpcomingEvents();
+    
+    return () => clearTimeout(timeoutId);
+  }, [filters, loadEvents]);
 
   const loadUpcomingEvents = async () => {
     try {

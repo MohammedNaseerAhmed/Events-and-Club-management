@@ -221,7 +221,7 @@ const recruitUsers = async (req, res) => {
             <p><strong>Description:</strong> ${clubAdmin.clubId.description}</p>
             <p><strong>Contact:</strong> ${clubAdmin.clubId.contact}</p>
           </div>
-          <p>To join our club, please register at: <a href="${process.env.CLIENT_URL}/register">Register Here</a></p>
+          <p>To join our club, please register at: <a href="${process.env.CLIENT_URL || 'http://localhost:5173'}/register">Register Here</a></p>
           <p>Best regards,<br>${clubAdmin.name}<br>Club Admin - ${clubAdmin.clubId.name}</p>
         </div>
       `

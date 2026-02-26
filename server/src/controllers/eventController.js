@@ -5,7 +5,10 @@ import Event from '../models/Event.js';
 export const createEvent = async (req, res, next) => {
   try {
     const event = await Event.create(req.body);
-    return ok(res, { event }, 201);
+    return res.status(201).json({
+      success: true,
+      data: { event }
+    });
   } catch (error) {
     next(error);
   }
@@ -59,38 +62,74 @@ export const getEvent = async (req, res, next) => {
   }
 };
 
-// List events with optional text search and filter by clubId with pagination
+// List events with optional text search, category, date filters and filter by clubId with pagination
 export const listEvents = async (req, res, next) => {
   try {
-    console.log('listEvents: Starting query...');
-    const { page = 1, limit = 10, q = '', clubId } = req.query;
-    console.log('listEvents: Query params:', { page, limit, q, clubId });
+    const { page = 1, limit = 10, search = '', category = '', date = '', clubId } = req.query;
     
     const filter = {};
-    if (q) filter.$text = { $search: String(q) };
+    
+    // Text search on title and description
+    if (search) {
+      filter.$or = [
+        { title: { $regex: String(search), $options: 'i' } },
+        { description: { $regex: String(search), $options: 'i' } }
+      ];
+    }
+    
+    // Category filter - since events don't have category, we'll filter by club category
+    if (category) {
+      // We need to populate clubs to filter by category
+      // For now, we'll skip this filter since events don't have direct category
+    }
+    
+    // Date filter
+    if (date) {
+      const now = new Date();
+      switch (date) {
+        case 'today':
+          const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+          const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+          filter.date = { $gte: startOfDay, $lt: endOfDay };
+          break;
+        case 'week':
+          const startOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+          const endOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 7);
+          filter.date = { $gte: startOfWeek, $lt: endOfWeek };
+          break;
+        case 'month':
+          const startOfMonth = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+          const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, now.getDate());
+          filter.date = { $gte: startOfMonth, $lt: endOfMonth };
+          break;
+      }
+    }
+    
     if (clubId && mongoose.isValidObjectId(clubId)) filter.clubId = clubId;
 
     const skip = (Number(page) - 1) * Number(limit);
-    console.log('listEvents: Filter:', filter);
 
     const [items, total] = await Promise.all([
-      Event.find(filter).sort({ date: 1 }).skip(skip).limit(Number(limit)),
+      Event.find(filter).populate('clubId', 'name category').sort({ date: 1 }).skip(skip).limit(Number(limit)),
       Event.countDocuments(filter),
     ]);
 
-    console.log('listEvents: Found', items.length, 'events, total:', total);
+    // If category filter is applied, filter results by club category
+    let filteredItems = items;
+    if (category && items.length > 0) {
+      filteredItems = items.filter(event => event.clubId && event.clubId.category === category);
+    }
 
     return res.json({
       success: true,
       data: {
-        items,
-        total,
+        items: filteredItems,
+        total: category ? filteredItems.length : total,
         page: Number(page),
-        pages: Math.ceil(total / Number(limit)),
+        pages: Math.ceil((category ? filteredItems.length : total) / Number(limit)),
       }
     });
   } catch (error) {
-    console.error('listEvents: Error:', error);
     next(error);
   }
 };
@@ -98,19 +137,15 @@ export const listEvents = async (req, res, next) => {
 // Get upcoming events (events with date >= now) limited to 20
 export const upcomingEvents = async (req, res, next) => {
   try {
-    console.log('upcomingEvents: Starting query...');
     const now = new Date();
-    console.log('upcomingEvents: Current date:', now);
     
     const items = await Event.find({ date: { $gte: now } }).sort({ date: 1 }).limit(20);
-    console.log('upcomingEvents: Found', items.length, 'events');
     
     return res.json({
       success: true,
       data: { items }
     });
   } catch (error) {
-    console.error('upcomingEvents: Error:', error);
     next(error);
   }
 };

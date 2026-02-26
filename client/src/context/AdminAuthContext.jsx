@@ -13,10 +13,12 @@ export const AdminAuthProvider = ({ children }) => {
   useEffect(() => {
     if (!token) {
       setAdminUser(null);
+      adminApi.setAdminToken('');
       return;
     }
     setStatus('loading');
-    adminApi.me(token)
+    adminApi.setAdminToken(token);
+    adminApi.me()
       .then(setAdminUser)
       .catch(() => {
         localStorage.removeItem('adminToken');

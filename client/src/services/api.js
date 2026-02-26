@@ -1,5 +1,5 @@
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-console.log('API_BASE_URL:', API_BASE_URL);
+//console.log('API_BASE_URL:', API_BASE_URL);
 
 const getAuthToken = () => localStorage.getItem('token');
 
@@ -32,8 +32,8 @@ const apiRequest = async (url, options = {}) => {
 const api = {
   login: async (email, password) => {
     const requestBody = { email, password };
-    console.log('Login request body:', requestBody);
-    console.log('Login URL:', `${API_BASE_URL}/api/auth/login`);
+    //console.log('Login request body:', requestBody);
+    //console.log('Login URL:', `${API_BASE_URL}/api/auth/login`);
     
     const res = await apiRequest(`${API_BASE_URL}/api/auth/login`, {
       method: 'POST',
@@ -41,11 +41,11 @@ const api = {
       body: JSON.stringify(requestBody),
     });
     
-    console.log('Response status:', res.status);
-    console.log('Response ok:', res.ok);
+    //console.log('Response status:', res.status);
+    //console.log('Response ok:', res.ok);
     
     const json = await res.json();
-    console.log('Response data:', json);
+    //console.log('Response data:', json);
     
     if (!res.ok) {
       console.error('Login failed:', json);

@@ -1,15 +1,24 @@
 import axios from 'axios';
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+
 const apiClient = axios.create({
-  baseURL: '/api/admin',
+  baseURL: `${API_BASE_URL}/api/admin`,
   headers: { 'Content-Type': 'application/json' }
 });
 
-let adminToken = null;
+let adminToken = localStorage.getItem('adminToken');
+if (adminToken) {
+  apiClient.defaults.headers.common['Authorization'] = `Bearer ${adminToken}`;
+}
 
 export const setAdminToken = (token) => {
   adminToken = token;
-  apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+  if (token) {
+    apiClient.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+  } else {
+    delete apiClient.defaults.headers.common['Authorization'];
+  }
 };
 
 export const login = async (email, password) => {

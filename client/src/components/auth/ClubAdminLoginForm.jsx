@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import api from '../../services/api';
 
 const ClubAdminLoginForm = () => {
   const [formData, setFormData] = useState({
@@ -10,7 +9,7 @@ const ClubAdminLoginForm = () => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const { login } = useAuth();
+  const { login, logout } = useAuth();
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -26,13 +25,13 @@ const ClubAdminLoginForm = () => {
     setError('');
 
     try {
-      const response = await api.login(formData.email, formData.password);
+      const response = await login(formData.email, formData.password);
       
       // Check if user is a club admin
       if (response.user.role === 'club_admin') {
-        login(response.token, response.user);
         navigate('/club-admin/dashboard');
       } else {
+        logout();
         setError('Access denied. Only club administrators can access this page.');
       }
     } catch (err) {

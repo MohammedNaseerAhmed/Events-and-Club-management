@@ -63,11 +63,26 @@ export const getClub = async (req, res, next) => {
   }
 };
 
-// List clubs with pagination and optional name search query
+// List clubs with pagination and optional search and category filters
 export const listClubs = async (req, res, next) => {
   try {
-    const { page = 1, limit = 10, q = '' } = req.query;
-    const filter = q ? { name: { $regex: String(q), $options: 'i' } } : {};
+    const { page = 1, limit = 10, search = '', category = '' } = req.query;
+    
+    const filter = {};
+    
+    // Text search on name and description
+    if (search) {
+      filter.$or = [
+        { name: { $regex: String(search), $options: 'i' } },
+        { description: { $regex: String(search), $options: 'i' } }
+      ];
+    }
+    
+    // Category filter
+    if (category) {
+      filter.category = category;
+    }
+    
     const skip = (Number(page) - 1) * Number(limit);
 
     const [items, total] = await Promise.all([

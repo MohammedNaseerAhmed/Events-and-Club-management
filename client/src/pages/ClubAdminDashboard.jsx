@@ -3,6 +3,8 @@ import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import { Calendar, Users, Award, Plus, Edit, Trash2, Eye, UserPlus, Save, X } from 'lucide-react';
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
 const ClubAdminDashboard = () => {
   const { user, status } = useAuth();
   const [club, setClub] = useState(null);
@@ -277,7 +279,7 @@ const ClubAdminDashboard = () => {
                       {event.poster ? (
                         <div className="flex items-center space-x-2">
                           <img 
-                            src={`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/uploads/${event.poster}`} 
+                            src={`${API_BASE_URL}/uploads/${event.poster}`} 
                             alt="Event poster" 
                             className="w-12 h-12 object-cover rounded"
                           />
