@@ -7,6 +7,7 @@ const RegisterForm = () => {
   const navigate = useNavigate();
 
   const [name, setName] = useState('');
+  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -15,14 +16,14 @@ const RegisterForm = () => {
   e.preventDefault();
   setError('');
   try {
-    const data = await register(name, email, password);
+    const data = await register(name, username, email, password);
     if (data && data.token) {
       navigate('/');
     } else {
       setError('Registration failed: No token received');
     }
   } catch (err) {
-    setError(err.message || 'Registration failed');
+    setError(err.response?.data?.error?.message || err.message || 'Registration failed');
   }
 };
 
@@ -37,6 +38,14 @@ const RegisterForm = () => {
           placeholder="Name"
           value={name}
           onChange={e => setName(e.target.value)}
+          required
+          className="w-full border px-3 py-2 rounded"
+        />
+        <input
+          type="text"
+          placeholder="Username (lowercase, numbers, underscore)"
+          value={username}
+          onChange={e => setUsername(e.target.value)}
           required
           className="w-full border px-3 py-2 rounded"
         />

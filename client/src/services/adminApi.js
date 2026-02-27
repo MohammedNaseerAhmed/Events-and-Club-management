@@ -1,9 +1,12 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+const normalizeAdminBase = (rawBase) => {
+  const base = (rawBase || 'http://localhost:5000').replace(/\/+$/, '');
+  return base.endsWith('/api') ? `${base}/admin` : `${base}/api/admin`;
+};
 
 const apiClient = axios.create({
-  baseURL: `${API_BASE_URL}/api/admin`,
+  baseURL: normalizeAdminBase(import.meta.env.VITE_API_URL),
   headers: { 'Content-Type': 'application/json' }
 });
 

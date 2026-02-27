@@ -2,6 +2,24 @@ import User from '../models/User.js';
 import bcrypt from 'bcryptjs';
 import Registration from '../models/Registration.js';
 
+// GET /api/users/check-username?username=xxx — availability check (public)
+export const checkUsername = async (req, res, next) => {
+  try {
+    const raw = req.query.username;
+    const username = typeof raw === 'string' ? raw.trim().toLowerCase() : '';
+    if (username.length < 4) {
+      return res.json({ success: true, data: { available: false, reason: 'Username must be at least 4 characters' } });
+    }
+    if (!/^[a-z0-9_]+$/.test(username)) {
+      return res.json({ success: true, data: { available: false, reason: 'Only lowercase letters, numbers, and underscores' } });
+    }
+    const exists = await User.exists({ username });
+    res.json({ success: true, data: { available: !exists } });
+  } catch (err) {
+    next(err);
+  }
+};
+
 // GET /api/users/:username — enforce privacySettings.profileVisible
 export const getUserProfile = async (req, res, next) => {
   try {

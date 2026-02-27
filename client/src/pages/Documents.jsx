@@ -102,7 +102,7 @@ const Documents = () => {
                 <select
                   value={orgId}
                   onChange={(e) => setOrgId(e.target.value)}
-                  className="w-full text-sm border border-gray-300 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full text-sm border border-gray-300 rounded-lg px-2 py-1.5 bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">All</option>
                   {organizations.map((org) => (
@@ -121,7 +121,7 @@ const Documents = () => {
                   value={eventId}
                   onChange={(e) => setEventId(e.target.value)}
                   placeholder="Paste event ID if needed"
-                  className="w-full text-sm border border-gray-300 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full text-sm border border-gray-300 rounded-lg px-2 py-1.5 bg-white text-slate-900 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
             </div>
@@ -144,7 +144,7 @@ const Documents = () => {
                     type="text"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    className="w-full text-sm border border-gray-300 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full text-sm border border-gray-300 rounded-lg px-2 py-1.5 bg-white text-slate-900 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     required
                   />
                 </div>

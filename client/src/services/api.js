@@ -1,6 +1,11 @@
 import axios from 'axios';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const normalizeApiBase = (rawBase) => {
+  const base = (rawBase || 'http://localhost:5000').replace(/\/+$/, '');
+  return base.endsWith('/api') ? base : `${base}/api`;
+};
+
+const API_BASE = normalizeApiBase(import.meta.env.VITE_API_URL);
 
 const api = axios.create({
   baseURL: API_BASE,
@@ -14,7 +19,8 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Handle 401 globally
+// Global 401: clear auth and redirect to login.
+// When backend supports refresh tokens, try refresh here before redirecting.
 api.interceptors.response.use(
   (res) => res,
   (err) => {
@@ -105,6 +111,66 @@ api.getClub = async (id) => {
 api.clubEvents = async (orgId) => {
   const res = await api.get('/events', { params: { clubId: orgId } });
   return res.data?.data?.events || [];
+};
+
+// Username availability
+api.checkUsername = async (username) => {
+  const res = await api.get('/users/check-username', { params: { username } });
+  return res.data?.data ?? { available: false };
+};
+
+// Profile photo upload (multipart, file field: avatar)
+api.uploadAvatar = async (file) => {
+  const formData = new FormData();
+  formData.append('avatar', file);
+  const res = await api.post('/upload/avatar', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+  return res.data?.data?.url;
+};
+
+// Chapters (unified Professional Chapters / Societies / Clubs / Celebrations)
+api.chaptersStats = async () => {
+  const res = await api.get('/chapters/stats');
+  return res.data?.data || {};
+};
+
+api.listChapters = async (filters = {}) => {
+  const params = { page: filters.page || 1, limit: filters.limit || 24 };
+  if (filters.category) params.category = filters.category;
+  if (filters.search) params.search = filters.search;
+  const res = await api.get('/chapters', { params });
+  return res.data?.data || { items: [], total: 0, page: 1, pages: 0 };
+};
+
+api.getChapter = async (id) => {
+  const res = await api.get(`/chapters/${id}`);
+  return res.data?.data || {};
+};
+
+api.updateChapter = async (id, body) => {
+  const res = await api.patch(`/chapters/${id}`, body);
+  return res.data?.data?.organization;
+};
+
+api.submitJoinRequest = async (chapterId, body) => {
+  const res = await api.post(`/chapters/${chapterId}/join`, body);
+  return res.data?.data;
+};
+
+api.listJoinRequests = async (chapterId, params = {}) => {
+  const res = await api.get(`/chapters/${chapterId}/join-requests`, { params });
+  return res.data?.data || { requests: [], total: 0, page: 1, pages: 0 };
+};
+
+api.reviewJoinRequest = async (chapterId, requestId, status, remarks) => {
+  const res = await api.patch(`/chapters/${chapterId}/join-requests/${requestId}`, { status, remarks });
+  return res.data?.data;
+};
+
+api.addChapterGalleryImage = async (chapterId, url, caption) => {
+  const res = await api.post(`/chapters/${chapterId}/gallery`, { url, caption });
+  return res.data?.data?.gallery || [];
 };
 
 // Admin helpers

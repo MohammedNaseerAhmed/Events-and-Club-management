@@ -5,15 +5,19 @@ import Notification from '../models/Notification.js';
 import AuditLog from '../models/AuditLog.js';
 import Registration from '../models/Registration.js';
 import { emitToUser } from '../utils/notificationEmitter.js';
+import { sendEventUpdateEmail } from '../utils/email.js';
+
+const clientBaseUrl = (process.env.CLIENT_URL || 'http://localhost:5173').replace(/\/+$/, '');
+const buildEventLink = (eventId) => `${clientBaseUrl}/events/${eventId}`;
 
 // ---- Organizations ----
 
 // POST /api/admin/organizations
 export const createOrganization = async (req, res, next) => {
   try {
-    const { name, shortName, fullForm, type, description, facultyCoordinator, heads } = req.body;
+    const { name, shortName, fullForm, type, description, mission, vision, facultyCoordinator, heads } = req.body;
     const org = await Organization.create({
-      name, shortName, fullForm, type, description, facultyCoordinator,
+      name, shortName, fullForm, type, description, mission, vision, facultyCoordinator,
       heads: heads || [],
       createdBy: req.user._id,
       isActive: true,
@@ -191,6 +195,15 @@ export const approveEvent = async (req, res, next) => {
 
     emitToUser(event.createdBy._id, { type: 'event_approved', eventId: event._id, title: 'Event Approved!' });
 
+    sendEventUpdateEmail({
+      to: event.createdBy.email,
+      name: event.createdBy.name,
+      eventTitle: event.title,
+      updateType: 'approved',
+      details: `Your event "${event.title}" has been approved by admin.`,
+      eventLink: buildEventLink(event._id),
+    }).catch(() => {});
+
     res.json({ success: true, data: { event } });
   } catch (err) {
     next(err);
@@ -217,6 +230,15 @@ export const rejectEvent = async (req, res, next) => {
     });
 
     emitToUser(event.createdBy._id, { type: 'event_rejected', eventId: event._id, title: 'Event Rejected' });
+
+    sendEventUpdateEmail({
+      to: event.createdBy.email,
+      name: event.createdBy.name,
+      eventTitle: event.title,
+      updateType: 'rejected',
+      details: reason ? `Your event was rejected. Reason: ${reason}` : 'Your event was rejected by admin.',
+      eventLink: buildEventLink(event._id),
+    }).catch(() => {});
 
     await AuditLog.create({ action: 'REJECT_EVENT', actorId: req.user._id, targetId: event._id, targetModel: 'Event', meta: { reason } });
 

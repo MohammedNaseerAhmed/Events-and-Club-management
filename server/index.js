@@ -26,6 +26,8 @@ import networkRoutes from './src/routes/network.js';
 import chatRoutes from './src/routes/chat.js';
 import documentRoutes from './src/routes/documents.js';
 import userRoutes from './src/routes/user.js';
+import chaptersRoutes from './src/routes/chapters.js';
+import uploadRoutes from './src/routes/uploads.js';
 
 loadEnv();
 
@@ -169,6 +171,8 @@ app.use('/api/network', networkRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/documents', documentRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api', chaptersRoutes);
+app.use('/api/upload', uploadRoutes);
 
 // 404 handler
 app.use((req, res, next) => next(createError(404, 'Not Found')));

@@ -2,51 +2,60 @@ import express from 'express';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
-import { auth, requireRole } from '../middleware/auth.js';
-import { ok } from '../utils/response.js';
+import User from '../models/User.js';
+import { authenticate, ensureRole } from '../middleware/auth.js';
 
-// Ensure the uploads directory exists
 const ensureDir = (dir) => {
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
 };
 ensureDir('uploads');
+ensureDir('uploads/avatars');
 
-// Multer storage configuration
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'uploads');
-  },
-  filename: function (req, file, cb) {
-    const ext = path.extname(file.originalname);
-    const base = path.basename(file.originalname, ext).replace(/[^a-z0-9_-]/gi, '_');
-    cb(null, `${Date.now()}_${base}${ext}`);
+const ALLOWED_MIMES = ['image/jpeg', 'image/jpg', 'image/png'];
+const AVATAR_MAX_SIZE = 2 * 1024 * 1024;
+
+const avatarStorage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, 'uploads/avatars'),
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase() || '.jpg';
+    const safe = `${req.user._id}_${Date.now()}${ext}`;
+    cb(null, safe);
   },
 });
 
-const upload = multer({ storage });
+const avatarUpload = multer({
+  storage: avatarStorage,
+  limits: { fileSize: AVATAR_MAX_SIZE },
+  fileFilter: (req, file, cb) => {
+    if (ALLOWED_MIMES.includes(file.mimetype)) return cb(null, true);
+    cb(new Error('Only JPG and PNG images are allowed'));
+  },
+});
+
 const router = express.Router();
 
-// Upload event poster (admin only)
 router.post(
-  '/event-poster',
-  auth,
-  requireRole('admin'),
-  upload.single('poster'),
-  (req, res) => {
-    const url = `/uploads/${req.file.filename}`;
-    return ok(res, { url, filename: req.file.filename });
-  }
-);
-
-// Upload club logo (admin only)
-router.post(
-  '/club-logo',
-  auth,
-  requireRole('admin'),
-  upload.single('logo'),
-  (req, res) => {
-    const url = `/uploads/${req.file.filename}`;
-    return ok(res, { url, filename: req.file.filename });
+  '/avatar',
+  authenticate,
+  (req, res, next) => {
+    avatarUpload.single('avatar')(req, res, (err) => {
+      if (err) {
+        if (err.code === 'LIMIT_FILE_SIZE') return res.status(400).json({ success: false, error: { message: 'File too large. Max 2MB.' } });
+        return res.status(400).json({ success: false, error: { message: err.message || 'Invalid file' } });
+      }
+      next();
+    });
+  },
+  async (req, res, next) => {
+    try {
+      if (!req.file) return res.status(400).json({ success: false, error: { message: 'No file uploaded' } });
+      const baseUrl = process.env.API_BASE_URL || '';
+      const url = baseUrl ? `${baseUrl.replace(/\/api\/?$/, '')}/uploads/avatars/${req.file.filename}` : `/uploads/avatars/${req.file.filename}`;
+      await User.findByIdAndUpdate(req.user._id, { profilePicUrl: url });
+      res.json({ success: true, data: { url } });
+    } catch (err) {
+      next(err);
+    }
   }
 );
 

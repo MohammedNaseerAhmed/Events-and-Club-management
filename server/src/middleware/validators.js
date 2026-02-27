@@ -15,10 +15,14 @@ const usernameSchema = Joi.string().pattern(/^[a-z0-9_]{3,30}$/).lowercase().req
   'string.pattern.base': 'username must be 3–30 characters, lowercase letters, numbers, and underscores only',
 });
 
-// Password: min 8, at least one letter and one number
-const passwordSchema = Joi.string().min(8).max(128).pattern(/^(?=.*[A-Za-z])(?=.*[0-9])/).required().messages({
-  'string.pattern.base': 'password must contain at least one letter and one number',
-});
+// Password: min 8, at least one upper, one lower, one number, one special character
+const passwordSchema = Joi.string()
+  .min(8).max(128)
+  .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?])/)
+  .required()
+  .messages({
+    'string.pattern.base': 'password must contain at least one uppercase letter, one lowercase letter, one number, and one special character',
+  });
 
 export const registerValidator = validate(
   Joi.object({
@@ -70,24 +74,90 @@ export const organizationCreateValidator = validate(
     name: Joi.string().min(2).max(120).required(),
     shortName: Joi.string().allow('').max(60),
     fullForm: Joi.string().allow('').max(200),
-    type: Joi.string().valid('Professional Chapter', 'Club', 'Council', 'Campus Event').required(),
-    description: Joi.string().allow('').max(2000),
+    type: Joi.string().valid('Professional Chapter', 'Society', 'Club', 'Council', 'Campus Event').required(),
+    description: Joi.string().allow('').max(5000),
+    mission: Joi.string().allow('').max(2000),
+    vision: Joi.string().allow('').max(2000),
     facultyCoordinator: Joi.string().allow('').max(120),
     heads: Joi.array().items(Joi.string().hex().length(24)).default([]),
   })
 );
+
+const committeeMemberSchema = Joi.object({
+  name: Joi.string().min(1).max(120).required(),
+  role: Joi.string().allow('').max(80),
+  photoUrl: Joi.string().uri().allow(''),
+  contact: Joi.string().allow('').max(60),
+  linkedIn: Joi.string().uri().allow(''),
+});
+
+const galleryImageSchema = Joi.object({
+  url: Joi.string().uri().required(),
+  caption: Joi.string().allow('').max(200),
+});
 
 export const organizationUpdateValidator = validate(
   Joi.object({
     name: Joi.string().min(2).max(120),
     shortName: Joi.string().allow('').max(60),
     fullForm: Joi.string().allow('').max(200),
-    type: Joi.string().valid('Professional Chapter', 'Club', 'Council', 'Campus Event'),
-    description: Joi.string().allow('').max(2000),
+    type: Joi.string().valid('Professional Chapter', 'Society', 'Club', 'Council', 'Campus Event'),
+    description: Joi.string().allow('').max(5000),
+    mission: Joi.string().allow('').max(2000),
+    vision: Joi.string().allow('').max(2000),
+    history: Joi.string().allow('').max(5000),
+    impact: Joi.string().allow('').max(2000),
+    objectives: Joi.array().items(Joi.string().max(300)),
     facultyCoordinator: Joi.string().allow('').max(120),
+    logoUrl: Joi.string().uri().allow(''),
+    bannerUrl: Joi.string().uri().allow(''),
+    socialLinks: Joi.object({
+      instagram: Joi.string().allow('').max(200),
+      linkedin: Joi.string().allow('').max(200),
+      twitter: Joi.string().allow('').max(200),
+      youtube: Joi.string().allow('').max(200),
+      email: Joi.string().email().allow(''),
+    }),
+    committee: Joi.array().items(committeeMemberSchema),
+    gallery: Joi.array().items(galleryImageSchema),
+    joinEnabled: Joi.boolean(),
     heads: Joi.array().items(Joi.string().hex().length(24)),
     isActive: Joi.boolean(),
   }).min(1)
+);
+
+export const chapterUpdateValidator = validate(
+  Joi.object({
+    description: Joi.string().allow('').max(5000),
+    mission: Joi.string().allow('').max(2000),
+    vision: Joi.string().allow('').max(2000),
+    history: Joi.string().allow('').max(5000),
+    impact: Joi.string().allow('').max(2000),
+    objectives: Joi.array().items(Joi.string().max(300)),
+    bannerUrl: Joi.string().uri().allow(''),
+    socialLinks: Joi.object({
+      instagram: Joi.string().allow('').max(200),
+      linkedin: Joi.string().allow('').max(200),
+      twitter: Joi.string().allow('').max(200),
+      youtube: Joi.string().allow('').max(200),
+      email: Joi.string().email().allow(''),
+    }),
+    committee: Joi.array().items(committeeMemberSchema),
+    gallery: Joi.array().items(galleryImageSchema),
+    joinEnabled: Joi.boolean(),
+  }).min(1)
+);
+
+export const joinRequestValidator = validate(
+  Joi.object({
+    name: Joi.string().min(2).max(120).required(),
+    rollNumber: Joi.string().allow('').max(40),
+    email: Joi.string().email().required(),
+    phone: Joi.string().allow('').max(20),
+    branch: Joi.string().allow('').max(80),
+    year: Joi.string().allow('').max(20),
+    whyJoin: Joi.string().allow('').max(2000),
+  })
 );
 
 // Post & comment

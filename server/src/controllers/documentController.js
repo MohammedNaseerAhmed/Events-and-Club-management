@@ -1,6 +1,7 @@
 import Document from '../models/Document.js';
 import path from 'path';
 import fs from 'fs';
+import mongoose from 'mongoose';
 
 // POST /api/documents
 export const uploadDocument = async (req, res, next) => {
@@ -8,6 +9,12 @@ export const uploadDocument = async (req, res, next) => {
         const { title, orgId, eventId, visibility } = req.body;
         if (!req.file) return res.status(400).json({ success: false, error: { message: 'No file uploaded' } });
         if (!title) return res.status(400).json({ success: false, error: { message: 'title is required' } });
+        if (orgId && !mongoose.isValidObjectId(orgId)) {
+            return res.status(400).json({ success: false, error: { message: 'Invalid organization id' } });
+        }
+        if (eventId && !mongoose.isValidObjectId(eventId)) {
+            return res.status(400).json({ success: false, error: { message: 'Invalid event id' } });
+        }
 
         const fileUrl = `/uploads/${req.file.filename}`;
         const doc = await Document.create({
@@ -34,8 +41,18 @@ export const listDocuments = async (req, res, next) => {
     try {
         const { orgId, eventId } = req.query;
         const filter = {};
-        if (orgId) filter.orgId = orgId;
-        if (eventId) filter.eventId = eventId;
+        if (orgId) {
+            if (!mongoose.isValidObjectId(orgId)) {
+                return res.status(400).json({ success: false, error: { message: 'Invalid organization id' } });
+            }
+            filter.orgId = orgId;
+        }
+        if (eventId) {
+            if (!mongoose.isValidObjectId(eventId)) {
+                return res.status(400).json({ success: false, error: { message: 'Invalid event id' } });
+            }
+            filter.eventId = eventId;
+        }
 
         const docs = await Document.find(filter)
             .populate('uploadedBy', 'name username profilePicUrl')

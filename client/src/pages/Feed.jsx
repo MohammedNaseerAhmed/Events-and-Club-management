@@ -1,20 +1,26 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import FeaturePage from '../components/layout/FeaturePage';
 import api from '../services/api';
+import { useAuth } from '../context/AuthContext';
+import { Calendar, Bell, MessageSquare, Building2 } from 'lucide-react';
 
 const PAGE_SIZE = 10;
 
 const Feed = () => {
+  const { unreadCount } = useAuth();
   const [items, setItems] = useState([]);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [upcomingEvents, setUpcomingEvents] = useState([]);
+  const [chapterStats, setChapterStats] = useState(null);
 
   useEffect(() => {
     loadFeed(1, true);
     loadUpcomingEvents();
+    api.chaptersStats().then(setChapterStats).catch(() => {});
   }, []);
 
   const loadFeed = async (pageToLoad = 1, replace = false) => {
@@ -57,9 +63,68 @@ const Feed = () => {
       title="Feed"
       subtitle="Mixed stream of approved events, posts, and campus announcements."
     >
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main feed */}
-        <div className="lg:col-span-2 space-y-4">
+      <div className="space-y-6">
+        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" aria-label="Overview">
+          <Link
+            to="/chapters"
+            className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-5 shadow-sm hover:shadow-md hover:border-emerald-200 dark:hover:border-emerald-800 transition-all flex items-center gap-4"
+          >
+            <div className="w-12 h-12 rounded-xl bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+              <Building2 size={24} />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-slate-900 dark:text-white">
+                {chapterStats ? (chapterStats.totalClubs || 0) + (chapterStats.totalSocieties || 0) + (chapterStats.totalChapters || 0) : '–'}
+              </p>
+              <p className="text-sm text-slate-500 dark:text-slate-400">Chapters & Clubs</p>
+            </div>
+          </Link>
+          <Link
+            to="/events"
+            className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-5 shadow-sm hover:shadow-md hover:border-blue-200 dark:hover:border-blue-800 transition-all flex items-center gap-4"
+          >
+            <div className="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center text-blue-600 dark:text-blue-400">
+              <Calendar size={24} />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-slate-900 dark:text-white">{upcomingEvents.length}</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400">Upcoming events</p>
+            </div>
+          </Link>
+          <Link
+            to="/chats"
+            className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-5 shadow-sm hover:shadow-md hover:border-violet-200 dark:hover:border-violet-800 transition-all flex items-center gap-4"
+          >
+            <div className="w-12 h-12 rounded-xl bg-violet-100 dark:bg-violet-900/40 flex items-center justify-center text-violet-600 dark:text-violet-400">
+              <MessageSquare size={24} />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-slate-900 dark:text-white">Messages</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400">Open conversations</p>
+            </div>
+          </Link>
+          <Link
+            to="/notifications"
+            className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-5 shadow-sm hover:shadow-md hover:border-amber-200 dark:hover:border-amber-800 transition-all flex items-center gap-4"
+          >
+            <div className="w-12 h-12 rounded-xl bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center text-amber-600 dark:text-amber-400 relative">
+              <Bell size={24} />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-amber-500 text-white text-xs rounded-full min-w-[18px] h-[18px] flex items-center justify-center">
+                  {unreadCount > 99 ? '99+' : unreadCount}
+                </span>
+              )}
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-slate-900 dark:text-white">{unreadCount}</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400">Unread notifications</p>
+            </div>
+          </Link>
+        </section>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Main feed */}
+          <div className="lg:col-span-2 space-y-4">
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
               {error}
@@ -91,10 +156,10 @@ const Feed = () => {
               </button>
             </div>
           )}
-        </div>
+          </div>
 
-        {/* Right sidebar – upcoming events */}
-        <aside className="space-y-4">
+          {/* Right sidebar – upcoming events */}
+          <aside className="space-y-4">
           <div className="bg-gradient-to-br from-blue-600/90 to-violet-600/90 rounded-2xl p-5 text-white shadow-lg">
             <h3 className="text-sm font-semibold tracking-wide uppercase opacity-80">
               Your campus hub
@@ -148,6 +213,7 @@ const Feed = () => {
             </div>
           </div>
         </aside>
+        </div>
       </div>
     </FeaturePage>
   );

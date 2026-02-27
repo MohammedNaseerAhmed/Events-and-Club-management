@@ -4,6 +4,33 @@ import Registration from '../models/Registration.js';
 import Notification from '../models/Notification.js';
 import User from '../models/User.js';
 import { emitToUser } from '../utils/notificationEmitter.js';
+import { sendEventUpdateEmail } from '../utils/email.js';
+
+const clientBaseUrl = (process.env.CLIENT_URL || 'http://localhost:5173').replace(/\/+$/, '');
+const buildEventLink = (eventId) => `${clientBaseUrl}/events/${eventId}`;
+
+const notifyRegisteredUsersByEmail = async (event, updateType, details) => {
+    const regs = await Registration.find({ eventId: event._id, status: 'registered' })
+        .populate('studentId', 'name email notificationSettings')
+        .lean();
+
+    if (!regs.length) return;
+
+    await Promise.allSettled(
+        regs
+            .filter((r) => r.studentId?.email && r.studentId?.notificationSettings?.email !== false)
+            .map((r) =>
+                sendEventUpdateEmail({
+                    to: r.studentId.email,
+                    name: r.studentId.name,
+                    eventTitle: event.title,
+                    updateType,
+                    details,
+                    eventLink: buildEventLink(event._id),
+                })
+            )
+    );
+};
 
 // GET /api/organizations (public)
 export const listPublicOrganizations = async (req, res, next) => {
@@ -91,6 +118,8 @@ export const updateEvent = async (req, res, next) => {
             return res.status(403).json({ success: false, error: { message: 'Forbidden' } });
         }
 
+        const prev = event.toObject();
+
         // Club heads cannot change status to approved
         const allowedFields = ['title', 'description', 'startDate', 'endDate', 'venue', 'capacity', 'visibility', 'tags', 'posterUrl'];
         if (req.user.role !== 'admin') {
@@ -105,6 +134,19 @@ export const updateEvent = async (req, res, next) => {
         if (req.user.role !== 'admin' && event.status === 'approved') event.status = 'pending';
 
         await event.save();
+
+        const hasImportantChange =
+            prev.title !== event.title ||
+            prev.description !== event.description ||
+            new Date(prev.startDate).getTime() !== new Date(event.startDate).getTime() ||
+            String(prev.endDate || '') !== String(event.endDate || '') ||
+            String(prev.venue || '') !== String(event.venue || '');
+
+        if (hasImportantChange) {
+            const details = `Event details changed for "${event.title}". Please check the latest schedule and venue.`;
+            await notifyRegisteredUsersByEmail(event, 'updated', details);
+        }
+
         res.json({ success: true, data: { event } });
     } catch (err) {
         next(err);
@@ -121,6 +163,10 @@ export const cancelEvent = async (req, res, next) => {
         }
         event.status = 'cancelled';
         await event.save();
+
+        const details = `The event "${event.title}" has been cancelled.`;
+        await notifyRegisteredUsersByEmail(event, 'cancelled', details);
+
         res.json({ success: true, data: { event } });
     } catch (err) {
         next(err);

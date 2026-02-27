@@ -5,9 +5,10 @@ import DashboardLayout from './components/layout/DashboardLayout';
 import AdminLayout from './components/layout/AdminLayout';
 
 // Import critical components directly for faster loading
-import Hero from './components/layout/Hero';
-import StudentLoginForm from './components/auth/StudentLoginForm';
-import RegisterForm from './components/auth/RegisterForm';
+import Home from './pages/Home';
+import Login from './pages/Login';
+import Signup from './pages/Signup';
+import VerifyEmail from './pages/VerifyEmail';
 import NotFound from './pages/NotFound';
 
 // Lazy load only heavy components
@@ -16,7 +17,10 @@ const EventDetails = lazy(() => import('./pages/EventDetails'));
 const Calendar = lazy(() => import('./pages/Calendar'));
 const Clubs = lazy(() => import('./pages/Clubs'));
 const ClubDetails = lazy(() => import('./components/clubs/ClubDetailsPage'));
-const AdminLoginForm = lazy(() => import('./components/auth/AdminLoginForm'));
+const Chapters = lazy(() => import('./pages/Chapters'));
+const ChapterDetail = lazy(() => import('./pages/ChapterDetail'));
+const ChapterJoinRequests = lazy(() => import('./pages/ChapterJoinRequests'));
+const AdminLogin = lazy(() => import('./pages/AdminLogin'));
 const ClubAdminLoginForm = lazy(() => import('./components/auth/ClubAdminLoginForm'));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
 const ClubAdminDashboard = lazy(() => import('./pages/ClubAdminDashboard'));
@@ -44,10 +48,11 @@ const RouterConfig = () => (
   <Suspense fallback={<LoadingSpinner />}>
     <Routes>
       {/* Public Routes */}
-      <Route path="/login" element={<StudentLoginForm />} />
-      <Route path="/admin/login" element={<AdminLoginForm />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/admin/login" element={<AdminLogin />} />
       <Route path="/club-admin/login" element={<ClubAdminLoginForm />} />
-      <Route path="/register" element={<RegisterForm />} />
+      <Route path="/register" element={<Signup />} />
+      <Route path="/verify-email" element={<VerifyEmail />} />
       
       {/* Admin Routes */}
       <Route element={<AdminLayout />}>
@@ -57,7 +62,7 @@ const RouterConfig = () => (
 
       {/* Public Routes with Layout */}
       <Route element={<DashboardLayout />}>
-        <Route path="/" element={<Hero />} />
+        <Route path="/" element={<Home />} />
         <Route path="/feed" element={<ProtectedRoute><Feed /></ProtectedRoute>} />
         <Route path="/network/invitations" element={<ProtectedRoute><NetworkInvitations /></ProtectedRoute>} />
         <Route path="/chats" element={<ProtectedRoute><Chats /></ProtectedRoute>} />
@@ -68,6 +73,9 @@ const RouterConfig = () => (
         <Route path="/courses" element={<ProtectedRoute><Courses /></ProtectedRoute>} />
         <Route path="/settings/:section" element={<ProtectedRoute><SettingsSection /></ProtectedRoute>} />
         <Route path="/calendar" element={<Calendar />} />
+        <Route path="/chapters" element={<Chapters />} />
+        <Route path="/chapters/:id" element={<ChapterDetail />} />
+        <Route path="/chapters/:id/requests" element={<ProtectedRoute><ChapterJoinRequests /></ProtectedRoute>} />
         <Route path="/clubs" element={<Clubs />} />
         <Route path="/clubs/:id" element={<ClubDetails />} />
         <Route path="/:username" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />

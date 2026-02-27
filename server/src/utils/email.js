@@ -2,9 +2,21 @@ import nodemailer from 'nodemailer';
 
 // Create transporter (you'll need to configure this with your email service)
 const createTransporter = () => {
-  // For development, you can use a test account or configure with real SMTP
+  // Prefer explicit SMTP credentials in any environment.
+  if (process.env.SMTP_USER && process.env.SMTP_PASS) {
+    return nodemailer.createTransporter({
+      host: process.env.SMTP_HOST || 'smtp-relay.brevo.com',
+      port: Number(process.env.SMTP_PORT || 587),
+      secure: false,
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS
+      }
+    });
+  }
+
+  // Fallback for local development only.
   if (process.env.NODE_ENV === 'development') {
-    // Using Ethereal Email for development (creates test accounts)
     return nodemailer.createTransporter({
       host: 'smtp.ethereal.email',
       port: 587,
@@ -14,8 +26,8 @@ const createTransporter = () => {
       }
     });
   }
-  
-  // For production, use your actual email service
+
+  // Last fallback
   return nodemailer.createTransporter({
     host: process.env.SMTP_HOST || 'smtp.gmail.com',
     port: process.env.SMTP_PORT || 587,
@@ -32,7 +44,7 @@ export const sendEmail = async (emailData) => {
     const transporter = createTransporter();
     
     const mailOptions = {
-      from: process.env.FROM_EMAIL || 'noreply@vnrvjiet.com',
+      from: process.env.SENDER_EMAIL || process.env.FROM_EMAIL || 'noreply@vnrvjiet.com',
       to: emailData.to,
       subject: emailData.subject,
       html: emailData.html,
@@ -74,6 +86,50 @@ export const sendWelcomeEmail = async (userEmail, userName) => {
     `
   };
   
+  return sendEmail(emailData);
+};
+
+export const sendEmailVerificationOtp = async (userEmail, userName, otpCode) => {
+  const emailData = {
+    to: userEmail,
+    subject: 'Verify your CampusHub account',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #2563eb;">Verify your email</h2>
+        <p>Hello ${userName || 'there'},</p>
+        <p>Use the OTP below to verify your account:</p>
+        <div style="font-size: 32px; font-weight: bold; letter-spacing: 6px; margin: 16px 0; color: #111827;">
+          ${otpCode}
+        </div>
+        <p>This OTP expires in 10 minutes.</p>
+        <p>If you did not create this account, you can ignore this email.</p>
+      </div>
+    `,
+  };
+  return sendEmail(emailData);
+};
+
+export const sendEventUpdateEmail = async ({ to, name, eventTitle, updateType, details, eventLink }) => {
+  const subjectMap = {
+    updated: `Event updated: ${eventTitle}`,
+    cancelled: `Event cancelled: ${eventTitle}`,
+    approved: `Event approved: ${eventTitle}`,
+    rejected: `Event update: ${eventTitle}`,
+  };
+
+  const emailData = {
+    to,
+    subject: subjectMap[updateType] || `Event update: ${eventTitle}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #2563eb;">Event Notification</h2>
+        <p>Hello ${name || 'there'},</p>
+        <p>There is an update for <strong>${eventTitle}</strong>.</p>
+        ${details ? `<p>${details}</p>` : ''}
+        ${eventLink ? `<p><a href="${eventLink}">View event details</a></p>` : ''}
+      </div>
+    `,
+  };
   return sendEmail(emailData);
 };
 

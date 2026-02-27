@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 import EventList from './EventList';
@@ -8,7 +8,8 @@ const EventsPage = () => {
   const { isAuthenticated } = useAuth();
   const [events, setEvents] = useState([]);
   const [upcomingEvents, setUpcomingEvents] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [isFiltering, setIsFiltering] = useState(false);
   const [error, setError] = useState('');
   const [filters, setFilters] = useState({
     category: '',
@@ -16,29 +17,42 @@ const EventsPage = () => {
     date: ''
   });
 
-  const loadEvents = useCallback(async () => {
+  const loadEvents = async (activeFilters, showInitialLoader = false) => {
     try {
-      setLoading(true);
+      if (showInitialLoader) setInitialLoading(true);
+      else setIsFiltering(true);
       setError('');
-      const data = await api.listEvents(filters);
+      const data = await api.listEvents(activeFilters);
       setEvents(Array.isArray(data) ? data : []);
     } catch (err) {
       setError(err.message);
       setEvents([]);
     } finally {
-      setLoading(false);
+      if (showInitialLoader) setInitialLoading(false);
+      else setIsFiltering(false);
     }
-  }, [filters]);
+  };
 
   useEffect(() => {
+    // First paint: fetch all events once with full-page loader.
+    loadEvents(filters, true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    // Live filter updates: debounce and keep existing list visible.
     const timeoutId = setTimeout(() => {
-      loadEvents();
+      loadEvents(filters, false);
     }, 300);
-    
-    loadUpcomingEvents();
-    
+
     return () => clearTimeout(timeoutId);
-  }, [filters, loadEvents]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters.category, filters.search, filters.date]);
+
+  useEffect(() => {
+    // Upcoming events are independent from list filters.
+    loadUpcomingEvents();
+  }, []);
 
   const loadUpcomingEvents = async () => {
     try {
@@ -58,14 +72,14 @@ const EventsPage = () => {
     try {
       await api.registerForEvent(eventId);
       // Reload events to update registration status
-      loadEvents();
+      loadEvents(filters, false);
       setError('');
     } catch (err) {
       setError(err.message);
     }
   };
 
-  if (loading) {
+  if (initialLoading) {
     return (
       <div className="flex justify-center items-center min-h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
@@ -100,7 +114,10 @@ const EventsPage = () => {
       )}
 
       <div>
-        <h2 className="text-2xl font-bold text-gray-800 mb-6">All Events</h2>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-bold text-gray-800">All Events</h2>
+          {isFiltering && <span className="text-sm text-gray-500">Updating...</span>}
+        </div>
         <EventList 
           events={events} 
           onRegister={handleRegisterEvent}

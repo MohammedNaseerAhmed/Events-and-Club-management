@@ -46,7 +46,7 @@ const EventFilters = ({ filters, onFiltersChange }) => {
             placeholder="Search events..."
             value={filters.search}
             onChange={(e) => handleFilterChange('search', e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg bg-white text-slate-900 placeholder-slate-500 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
         </div>
 
@@ -54,7 +54,7 @@ const EventFilters = ({ filters, onFiltersChange }) => {
         <select
           value={filters.category}
           onChange={(e) => handleFilterChange('category', e.target.value)}
-          className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="px-4 py-2 border border-gray-300 rounded-lg bg-white text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         >
           <option value="">All Categories</option>
           <option value="technical">Technical</option>
@@ -67,7 +67,7 @@ const EventFilters = ({ filters, onFiltersChange }) => {
         <select
           value={filters.date}
           onChange={(e) => handleFilterChange('date', e.target.value)}
-          className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="px-4 py-2 border border-gray-300 rounded-lg bg-white text-slate-900 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         >
           <option value="">All Dates</option>
           <option value="today">Today</option>

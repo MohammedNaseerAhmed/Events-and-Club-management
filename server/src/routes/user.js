@@ -3,11 +3,12 @@ import { authenticate, optionalAuth } from '../middleware/auth.js';
 import { profileUpdateValidator, passwordChangeValidator, privacyUpdateValidator, notificationSettingsValidator } from '../middleware/validators.js';
 import {
     getUserProfile, updateProfile, changePassword, updatePrivacy,
-    updateNotificationSettings, followOrg, unfollowOrg, deleteAccount, getMyRegistrations,
+    updateNotificationSettings, followOrg, unfollowOrg, deleteAccount, getMyRegistrations, checkUsername,
 } from '../controllers/userController.js';
 
 const router = express.Router();
 
+router.get('/check-username', checkUsername);
 router.get('/me/registrations', authenticate, getMyRegistrations);
 router.patch('/me', authenticate, profileUpdateValidator, updateProfile);
 router.patch('/me/password', authenticate, passwordChangeValidator, changePassword);

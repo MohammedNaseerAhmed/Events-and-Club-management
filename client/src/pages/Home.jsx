@@ -1,12 +1,11 @@
 import React from 'react';
+import { Navigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import Hero from '../components/layout/Hero';
-import DashboardLayout from '../components/layout/DashboardLayout';
 
-const Home = () => (
-  <DashboardLayout>
-    <Hero />
-    {/* Add more homepage content here */}
-  </DashboardLayout>
-);
-
-export default Home;
+export default function Home() {
+  const { isAuthenticated, status } = useAuth();
+  if (status === 'loading') return null;
+  if (isAuthenticated) return <Navigate to="/feed" replace />;
+  return <Hero />;
+}
